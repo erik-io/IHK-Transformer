@@ -1,0 +1,24 @@
+CREATE TABLE Ausbildung(
+    ausbildung_id int PRIMARY KEY AUTO_INCREMENT NOT NULL,
+    berufsbezeichnung varchar(50) NOT NULL,
+    kurzbezeichnung varchar(4) NOT NULL
+);
+
+CREATE TABLE Ausbilder(
+    ausbilder_id int PRIMARY KEY AUTO_INCREMENT NOT NULL,
+    vorname varchar(50) NOT NULL,
+    nachname varchar(50) NOT NULL
+    );
+
+CREATE TABLE Azubi(
+	azubi_id int PRIMARY KEY AUTO_INCREMENT NOT NULL,
+    vorname varchar(50),
+    nachname varchar(50) NOT NULL,
+    ausbildungsbeginn int NOT NULL,
+    ausbildung_id int NOT NULL,
+    ausbilder_id int NOT NULL,
+    
+    
+    FOREIGN KEY (ausbildung_id) REFERENCES Ausbildung(ausbildung_id),
+    FOREIGN KEY (ausbilder_id) REFERENCES Ausbilder(ausbilder_id)
+);
