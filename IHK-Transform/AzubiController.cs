@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,6 +19,21 @@ namespace IHK_Transform
         public List<Azubi> GetAzubi()
         {
             return _azubiService.GetAzubi();
+        }
+
+        public void DisplayAzubis()
+        {
+            var azubis = _azubiService.GetAzubi();
+            var ausbilder = _azubiService.GetAusbilder();
+            var ausbildung = _azubiService.GetAusbildung();
+
+            foreach (var azubi in azubis)
+            {
+                var ausbilderName = ausbilder.FirstOrDefault(a => a.getAusbilderID() == azubi.getAzubiID());
+                var beruf = ausbildung.FirstOrDefault(b => b.getAusbildungsID() == azubi.getAusbildungID());
+
+                Debug.WriteLine($"Azubi: {azubi._vorname} {azubi._nachname} - Ausbilder: {ausbilderName} - Beruf: {beruf}");
+            }
         }
     }
 }

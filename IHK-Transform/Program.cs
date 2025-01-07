@@ -14,17 +14,9 @@ namespace IHK_Transform
         [STAThread]
         static void Main()
         {
-            AzubiService azubiService = new AzubiService();
-            AzubiController azubiController = new AzubiController(azubiService);
-            List<Azubi> azubis = azubiController.GetAzubi();
-            foreach (Azubi azubi in azubis)
-            {
-                Console.WriteLine(azubi.ToString());
-            }
-            Console.ReadLine();
-            //Application.EnableVisualStyles();
-            //Application.SetCompatibleTextRenderingDefault(false);
-            //Application.Run(new Form1());
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new Form1());
         }
     }
 }

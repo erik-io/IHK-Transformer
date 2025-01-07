@@ -16,5 +16,13 @@ namespace IHK_Transform
         {
             InitializeComponent();
         }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            AzubiService azubiService = new AzubiService();
+            AzubiController azubiController = new AzubiController(azubiService);
+            List<Azubi> azubis = azubiController.GetAzubi();
+            azubiController.DisplayAzubis();
+        }
     }
 }
