@@ -25,6 +25,10 @@ namespace IHK_Transform
             _nachname = nachname;
         }
 
+        private int _ausbilder_id { get; set; }
+        private string _vorname { get; set; }
+        private string _nachname { get; set; }
+
         public int getAusbilderID()
         {
             return _ausbilder_id;
@@ -35,9 +39,25 @@ namespace IHK_Transform
             _ausbilder_id = ausbilderID;
         }
 
-        private int _ausbilder_id { get; set; }
-        private string _vorname { get; set; }
-        private string _nachname { get; set; }
+        public string getVorname()
+        {
+            return _vorname;
+        }
+
+        public void setVorname(string vorname)
+        {
+            _vorname = vorname;
+        }
+
+        public string getNachname()
+        {
+            return _nachname;
+        }
+
+        public void setNachname(string nachname)
+        {
+            _nachname = nachname;
+        }
 
         public override string ToString()
         {

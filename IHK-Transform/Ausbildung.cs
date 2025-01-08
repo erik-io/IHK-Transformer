@@ -25,6 +25,10 @@ namespace IHK_Transform
             _kurzbezeichnung = kurzbezeichnung;
         }
 
+        private int _ausbildung_id { get; set; }
+        private string _berufsbezeichnung { get; set; }
+        private string _kurzbezeichnung { get; set; }
+
         public int getAusbildungsID()
         {
             return _ausbildung_id;
@@ -35,9 +39,25 @@ namespace IHK_Transform
             _ausbildung_id = ausbildungID;
         }
 
-        private int _ausbildung_id { get; set; }
-        private string _berufsbezeichnung { get; set; }
-        private string _kurzbezeichnung { get; set; }
+        public string getBerufsbezeichnung()
+        {
+            return _berufsbezeichnung;
+        }
+
+        public void setBerufsbezeichnung(string berufsbezeichnung)
+        {
+            _berufsbezeichnung = berufsbezeichnung;
+        }
+
+        public string getKurzbezeichnung()
+        {
+            return _kurzbezeichnung;
+        }
+
+        public void setKurzbezeichnung(string kurzbezeichnung)
+        {
+            _kurzbezeichnung = kurzbezeichnung;
+        }
 
         public override string ToString()
         {

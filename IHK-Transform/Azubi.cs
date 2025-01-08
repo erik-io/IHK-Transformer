@@ -33,15 +33,13 @@ namespace IHK_Transform
             _ausbilder_id = ausbilderID;
         }
 
-        public void setAusbildungID(int ausbildungID)
-        {
-            _ausbildung_id = ausbildungID;
-        }
-
-        public int getAusbildungID()
-        {
-            return _ausbildung_id;
-        }
+        private int _azubi_id { get; set; }
+        private string _vorname { get; set; }
+        private string _nachname { get; set; }
+        private string _ausbildungsberuf { get; set; }
+        private int _ausbildungsbeginn { get; set; }
+        private int _ausbildung_id { get; set; }
+        private int _ausbilder_id { get; set; }
 
         public int getAzubiID()
         {
@@ -53,13 +51,65 @@ namespace IHK_Transform
             _azubi_id = azubiID;
         }
 
-        private int _azubi_id { get; set; }
-        public string _vorname { get; set; }
-        public string _nachname { get; set; }
-        private string _ausbildungsberuf { get; set; }
-        private int _ausbildungsbeginn { get; set; }
-        private int _ausbildung_id { get; set; }
-        private int _ausbilder_id { get; set; }
+        public string getVorname()
+        {
+            return _vorname;
+        }
+
+        public void setVorname(string vorname)
+        {
+            _vorname = vorname;
+        }
+
+        public string getNachname()
+        {
+            return _nachname;
+        }
+
+        public void setNachname(string nachname)
+        {
+            _nachname = nachname;
+        }
+
+        public string getAusbildungsberuf()
+        {
+            return _ausbildungsberuf;
+        }
+
+        public void setAusbildungsberuf(string ausbildungsberuf)
+        {
+            _ausbildungsberuf = ausbildungsberuf;
+        }
+
+        public int getAusbildungsbeginn()
+        {
+            return _ausbildungsbeginn;
+        }
+
+        public void setAusbildungsbeginn(int ausbildungsbeginn)
+        {
+            _ausbildungsbeginn = ausbildungsbeginn;
+        }
+
+        public int getAusbildungID()
+        {
+            return _ausbildung_id;
+        }
+
+        public void setAusbildungID(int ausbildungID)
+        {
+            _ausbildung_id = ausbildungID;
+        }
+
+        public int getAusbilderID()
+        {
+            return _ausbilder_id;
+        }
+
+        public void setAusbilderID(int ausbilderID)
+        {
+            _ausbilder_id = ausbilderID;
+        }
 
         public override string ToString()
         {
