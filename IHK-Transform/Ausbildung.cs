@@ -29,12 +29,12 @@ namespace IHK_Transform
         private string _berufsbezeichnung { get; set; }
         private string _kurzbezeichnung { get; set; }
 
-        public int getAusbildungsID()
+        public int getAusbildungID()
         {
             return _ausbildung_id;
         }
 
-        public void setAusbildungsID(int ausbildungID)
+        public void setAusbildungID(int ausbildungID)
         {
             _ausbildung_id = ausbildungID;
         }

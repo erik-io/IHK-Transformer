@@ -85,7 +85,7 @@ namespace IHK_Transform
                     while (reader.Read())
                     {
                         var ausbildung = new Ausbildung();
-                        ausbildung.setAusbildungsID(reader.GetInt32("ausbildung_id"));
+                        ausbildung.setAusbildungID(reader.GetInt32("ausbildung_id"));
                         ausbildung.setBerufsbezeichnung(reader.GetString("berufsbezeichnung"));
                         ausbildung.setKurzbezeichnung(reader.GetString("kurzbezeichnung"));
                         list.Add(ausbildung);

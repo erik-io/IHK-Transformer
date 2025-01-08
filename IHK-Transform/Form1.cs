@@ -13,6 +13,8 @@ namespace IHK_Transform
 {
     public partial class Form1 : Form
     {
+        private DataHandler _dataHandler;
+
         public Form1()
         {
             InitializeComponent();
@@ -20,10 +22,15 @@ namespace IHK_Transform
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            string connectionString = "Server=localhost;Database=ihk_transform;Uid=root;Pwd=;";
+            
+        }
 
+        private void btnLoadSQL_Click(object sender, EventArgs e)
+        {
+            string connectionString = "Server=localhost;Database=ihk_transform;Uid=root;Pwd=;";
             var sqlHelper = new ReadWrite_SQL(connectionString);
 
+            // Daten aus der Datenbank abrufen
             var azubis = sqlHelper.FetchAzubi();
             var ausbilder = sqlHelper.FetchAusbilder();
             var ausbildung = sqlHelper.FetchAusbildung();
@@ -31,10 +38,38 @@ namespace IHK_Transform
             foreach (var azubi in azubis)
             {
                 var ausbilderName = ausbilder.FirstOrDefault(a => a.getAusbilderID() == azubi.getAusbilderID());
-                var beruf = ausbildung.FirstOrDefault(b => b.getAusbildungsID() == azubi.getAusbildungID());
+                var beruf = ausbildung.FirstOrDefault(b => b.getAusbildungID() == azubi.getAusbildungID());
 
                 Debug.WriteLine($"Azubi: {azubi.getVorname()} {azubi.getNachname()} - Ausbilder: {ausbilderName} - Beruf: {beruf}");
             }
+
+            // Daten für das DataGridView aufbereiten
+            var data = new List<object>();
+            foreach (var azubi in azubis)
+            {
+                var ausbilderName = ausbilder.FirstOrDefault(a => a.getAusbilderID() == azubi.getAusbilderID());
+                var beruf = ausbildung.FirstOrDefault(b => b.getAusbildungID() == azubi.getAusbildungID());
+
+                var ausbildungsberuf = $"{beruf?.getKurzbezeichnung()+azubi.getAusbildungsbeginn()}";
+                var ausbilderFullName = ausbilderName != null
+                    ? $"{ausbilderName.getVorname()} {ausbilderName.getNachname()}"
+                   : "Unbekannt";
+
+                data.Add(new
+                {
+                    AzubiID = azubi.getAzubiID(),
+                    Vorname = azubi.getVorname(),
+                    Nachname = azubi.getNachname(),
+                    Ausbildungsberuf = ausbildungsberuf,
+                    Ausbilder = ausbilderFullName
+                });
+
+            }
+            dgvAzubi.DataSource = data;
+        }
+
+        private void btnLoadCSV_Click(object sender, EventArgs e)
+        {
 
         }
     }

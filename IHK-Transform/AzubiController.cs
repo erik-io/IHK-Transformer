@@ -30,7 +30,7 @@ namespace IHK_Transform
             foreach (var azubi in azubis)
             {
                 var ausbilderName = ausbilder.FirstOrDefault(a => a.getAusbilderID() == azubi.getAzubiID());
-                var beruf = ausbildung.FirstOrDefault(b => b.getAusbildungsID() == azubi.getAusbildungID());
+                var beruf = ausbildung.FirstOrDefault(b => b.getAusbildungID() == azubi.getAusbildungID());
 
                 Debug.WriteLine($"Azubi: {azubi.getVorname()} {azubi.getNachname()} - Ausbilder: {ausbilderName} - Beruf: {beruf}");
             }
