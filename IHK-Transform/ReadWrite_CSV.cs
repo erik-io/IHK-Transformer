@@ -111,17 +111,17 @@ namespace IHK_Transform
             }
         }
 
-        public List<Azubi> FetchAzubi()
+        public List<Azubi> GetAzubi()
         {
             return _azubis;
         }
 
-        public List<Ausbilder> FetchAusbilder()
+        public List<Ausbilder> GeAusbilder()
         {
             return _ausbilder;
         }
 
-        public List<Ausbildung> FetchAusbildung()
+        public List<Ausbildung> GetAusbildung()
         {
             return _ausbildungen;
         }

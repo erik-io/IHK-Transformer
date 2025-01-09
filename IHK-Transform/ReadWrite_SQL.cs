@@ -23,7 +23,7 @@ namespace IHK_Transform
             return new MySqlConnection(_connectionString);
         }
 
-        public List<Azubi> FetchAzubi()
+        public List<Azubi> GetAzubi()
         {
             var list = new List<Azubi>();
 
@@ -49,7 +49,7 @@ namespace IHK_Transform
             return list;
         }
 
-        public List<Ausbilder> FetchAusbilder()
+        public List<Ausbilder> GetAusbilder()
         {
             var list = new List<Ausbilder>();
             
@@ -72,7 +72,7 @@ namespace IHK_Transform
             return list;
         }
 
-        public List<Ausbildung> FetchAusbildung()
+        public List<Ausbildung> GetAusbildung()
         {
             var list = new List<Ausbildung>();
 
