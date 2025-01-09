@@ -23,11 +23,11 @@ namespace IHK_Transform
             _ausbilder_id = ausbilderID;
         }
 
-        public Azubi(string vorname, string nachname, string ausbildungsberuf, int ausbildungsbeginn, int ausbildungID, int ausbilderID)
+        public Azubi(int azubiID, string vorname, string nachname, int ausbildungsbeginn, int ausbildungID, int ausbilderID)
         {
+            _azubi_id = azubiID;
             _vorname = vorname;
             _nachname = nachname;
-            _ausbildungsberuf = ausbildungsberuf;
             _ausbildungsbeginn = ausbildungsbeginn;
             _ausbildung_id = ausbildungID;
             _ausbilder_id = ausbilderID;

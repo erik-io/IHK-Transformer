@@ -13,8 +13,6 @@ namespace IHK_Transform
 {
     public partial class Form1 : Form
     {
-        private DataHandler _dataHandler;
-
         public Form1()
         {
             InitializeComponent();
@@ -70,7 +68,41 @@ namespace IHK_Transform
 
         private void btnLoadCSV_Click(object sender, EventArgs e)
         {
+            var csvHelper = new ReadWrite_CSV();
 
+            csvHelper.LoadAzubiData();
+            csvHelper.LoadAusbilderData();
+            csvHelper.LoadAusbildungData();
+
+            var azubis = csvHelper.FetchAzubi();
+            var ausbilder = csvHelper.FetchAusbilder();
+            var ausbildung = csvHelper.FetchAusbildung();
+
+            var data = new List<object>();
+            foreach (var azubi in azubis)
+            {
+                var ausbilderName = ausbilder.FirstOrDefault(a => a.getAusbilderID() == azubi.getAusbilderID());
+                var beruf = ausbildung.FirstOrDefault(b => b.getAusbildungID() == azubi.getAusbildungID());
+
+                var ausbildungsberuf = beruf != null
+                    ? $"{beruf.getKurzbezeichnung()}{azubi.getAusbildungsbeginn()}"
+                    : "Unbekannt";
+
+                var ausbilderFullName = ausbilderName != null
+                    ? $"{ausbilderName.getVorname()} {ausbilderName.getNachname()}"
+                    : "Unbekannt";
+
+                data.Add(new
+                {
+                    AzubiID = azubi.getAzubiID(),
+                    Vorname = azubi.getVorname(),
+                    Nachname = azubi.getNachname(),
+                    Ausbildungsberuf = ausbildungsberuf,
+                    Ausbilder = ausbilderFullName
+                });
+            }
+
+            dgvAzubi.DataSource = data;
         }
     }
 }
