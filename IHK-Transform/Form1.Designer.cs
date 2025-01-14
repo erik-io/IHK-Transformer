@@ -31,6 +31,7 @@
             this.dgvAzubi = new System.Windows.Forms.DataGridView();
             this.btnLoadSQL = new System.Windows.Forms.Button();
             this.btnLoadCSV = new System.Windows.Forms.Button();
+            this.btnHierarchie = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dgvAzubi)).BeginInit();
             this.SuspendLayout();
             // 
@@ -62,11 +63,22 @@
             this.btnLoadCSV.UseVisualStyleBackColor = true;
             this.btnLoadCSV.Click += new System.EventHandler(this.btnLoadCSV_Click);
             // 
+            // btnHierarchie
+            // 
+            this.btnHierarchie.Location = new System.Drawing.Point(333, 101);
+            this.btnHierarchie.Name = "btnHierarchie";
+            this.btnHierarchie.Size = new System.Drawing.Size(75, 23);
+            this.btnHierarchie.TabIndex = 3;
+            this.btnHierarchie.Text = "Hierarchie";
+            this.btnHierarchie.UseVisualStyleBackColor = true;
+            this.btnHierarchie.Click += new System.EventHandler(this.btnHierarchie_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.btnHierarchie);
             this.Controls.Add(this.btnLoadCSV);
             this.Controls.Add(this.btnLoadSQL);
             this.Controls.Add(this.dgvAzubi);
@@ -83,6 +95,7 @@
         private System.Windows.Forms.DataGridView dgvAzubi;
         private System.Windows.Forms.Button btnLoadSQL;
         private System.Windows.Forms.Button btnLoadCSV;
+        private System.Windows.Forms.Button btnHierarchie;
     }
 }
 

@@ -12,18 +12,18 @@ namespace IHK_Transform
         {
         }
 
-        public Azubi(int azubiID, string vorname, string nachname, string ausbildungsberuf, int ausbildungsbeginn, int ausbildungID, int ausbilderID)
+        public Azubi(int azubiID, string vorname, string nachname, string ausbildung, DateTime ausbildungsbeginn, string ausbildungID, int ausbilderID)
         {
             _azubi_id = azubiID;
             _vorname = vorname;
             _nachname = nachname;
-            _ausbildungsberuf = ausbildungsberuf;
+            _ausbildung = ausbildung;
             _ausbildungsbeginn = ausbildungsbeginn;
             _ausbildung_id = ausbildungID;
             _ausbilder_id = ausbilderID;
         }
 
-        public Azubi(int azubiID, string vorname, string nachname, int ausbildungsbeginn, int ausbildungID, int ausbilderID)
+        public Azubi(int azubiID, string vorname, string nachname, DateTime ausbildungsbeginn, string ausbildungID, int ausbilderID)
         {
             _azubi_id = azubiID;
             _vorname = vorname;
@@ -36,9 +36,9 @@ namespace IHK_Transform
         private int _azubi_id { get; set; }
         private string _vorname { get; set; }
         private string _nachname { get; set; }
-        private string _ausbildungsberuf { get; set; }
-        private int _ausbildungsbeginn { get; set; }
-        private int _ausbildung_id { get; set; }
+        private string _ausbildung { get; set; }
+        private DateTime _ausbildungsbeginn { get; set; }
+        private string _ausbildung_id { get; set; }
         private int _ausbilder_id { get; set; }
 
         public int getAzubiID()
@@ -71,32 +71,32 @@ namespace IHK_Transform
             _nachname = nachname;
         }
 
-        public string getAusbildungsberuf()
+        public string getAusbildung()
         {
-            return _ausbildungsberuf;
+            return _ausbildung;
         }
 
-        public void setAusbildungsberuf(string ausbildungsberuf)
+        public void setAusbildung(string ausbildung)
         {
-            _ausbildungsberuf = ausbildungsberuf;
+            _ausbildung = ausbildung;
         }
 
-        public int getAusbildungsbeginn()
+        public DateTime getAusbildungsbeginn()
         {
             return _ausbildungsbeginn;
         }
 
-        public void setAusbildungsbeginn(int ausbildungsbeginn)
+        public void setAusbildungsbeginn(DateTime ausbildungsbeginn)
         {
             _ausbildungsbeginn = ausbildungsbeginn;
         }
 
-        public int getAusbildungID()
+        public string getAusbildungID()
         {
             return _ausbildung_id;
         }
 
-        public void setAusbildungID(int ausbildungID)
+        public void setAusbildungID(string ausbildungID)
         {
             _ausbildung_id = ausbildungID;
         }
@@ -113,7 +113,7 @@ namespace IHK_Transform
 
         public override string ToString()
         {
-            return base.ToString();
+            return $"{_vorname} {_nachname}";
         }
     }
 }

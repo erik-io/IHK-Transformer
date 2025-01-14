@@ -12,56 +12,38 @@ namespace IHK_Transform
         {
         }
 
-        public Ausbildung(int ausbildungID, string berufsbezeichnung, string kurzbezeichnung)
+        public Ausbildung(string ausbildungID, string ausbildung)
         {
             _ausbildung_id = ausbildungID;
-            _berufsbezeichnung = berufsbezeichnung;
-            _kurzbezeichnung = kurzbezeichnung;
+            _ausbildung = ausbildung;
         }
 
-        public Ausbildung(string berufsbezeichnung, string kurzbezeichnung)
-        {
-            _berufsbezeichnung = berufsbezeichnung;
-            _kurzbezeichnung = kurzbezeichnung;
-        }
+        private string _ausbildung_id { get; set; }
+        private string _ausbildung { get; set; }
 
-        private int _ausbildung_id { get; set; }
-        private string _berufsbezeichnung { get; set; }
-        private string _kurzbezeichnung { get; set; }
-
-        public int getAusbildungID()
+        public string getAusbildungID()
         {
             return _ausbildung_id;
         }
 
-        public void setAusbildungID(int ausbildungID)
+        public void setAusbildungID(string ausbildungID)
         {
             _ausbildung_id = ausbildungID;
         }
 
-        public string getBerufsbezeichnung()
+        public string getAusbildung()
         {
-            return _berufsbezeichnung;
+            return _ausbildung;
         }
 
-        public void setBerufsbezeichnung(string berufsbezeichnung)
+        public void setAusbildung(string berufsbezeichnung)
         {
-            _berufsbezeichnung = berufsbezeichnung;
-        }
-
-        public string getKurzbezeichnung()
-        {
-            return _kurzbezeichnung;
-        }
-
-        public void setKurzbezeichnung(string kurzbezeichnung)
-        {
-            _kurzbezeichnung = kurzbezeichnung;
+            _ausbildung = berufsbezeichnung;
         }
 
         public override string ToString()
         {
-            return _kurzbezeichnung;
+            return _ausbildung_id;
         }
     }
 }

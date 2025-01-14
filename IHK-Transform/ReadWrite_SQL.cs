@@ -13,6 +13,10 @@ namespace IHK_Transform
     {
         private readonly string _connectionString;
 
+        public ReadWrite_SQL()
+        {
+        }
+
         public ReadWrite_SQL(string connectionString)
         {
             _connectionString = connectionString;
@@ -30,7 +34,7 @@ namespace IHK_Transform
             using (MySqlConnection conn = GetConnection())
             {
                 conn.Open();
-                MySqlCommand cmd = new MySqlCommand("SELECT * FROM azubi", conn);
+                MySqlCommand cmd = new MySqlCommand("SELECT * FROM Azubis", conn);
                 using (MySqlDataReader reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
@@ -39,8 +43,8 @@ namespace IHK_Transform
                         azubi.setAzubiID(reader.GetInt32("azubi_id"));
                         azubi.setVorname(reader.GetString("vorname"));
                         azubi.setNachname(reader.GetString("nachname"));
-                        azubi.setAusbildungsbeginn(reader.GetInt32("ausbildungsbeginn"));
-                        azubi.setAusbildungID(reader.GetInt32("ausbildung_id"));
+                        azubi.setAusbildungsbeginn(reader.GetDateTime("ausbildungsbeginn"));
+                        azubi.setAusbildungID(reader.GetString("ausbildung_id"));
                         azubi.setAusbilderID(reader.GetInt32("ausbilder_id"));
                         list.Add(azubi);
                     }
@@ -79,15 +83,14 @@ namespace IHK_Transform
             using (MySqlConnection conn = GetConnection())
             {
                 conn.Open();
-                MySqlCommand cmd = new MySqlCommand("SELECT * FROM ausbildung", conn);
+                MySqlCommand cmd = new MySqlCommand("SELECT * FROM ausbildungen", conn);
                 using (MySqlDataReader reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
                     {
                         var ausbildung = new Ausbildung();
-                        ausbildung.setAusbildungID(reader.GetInt32("ausbildung_id"));
-                        ausbildung.setBerufsbezeichnung(reader.GetString("berufsbezeichnung"));
-                        ausbildung.setKurzbezeichnung(reader.GetString("kurzbezeichnung"));
+                        ausbildung.setAusbildungID(reader.GetString("ausbildung_id"));
+                        ausbildung.setAusbildung(reader.GetString("ausbildung"));
                         list.Add(ausbildung);
                     }
                 }

@@ -19,12 +19,6 @@ namespace IHK_Transform
             _nachname = nachname;
         }
 
-        public Ausbilder(string vorname, string nachname)
-        {
-            _vorname = vorname;
-            _nachname = nachname;
-        }
-
         private int _ausbilder_id { get; set; }
         private string _vorname { get; set; }
         private string _nachname { get; set; }

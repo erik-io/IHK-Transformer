@@ -14,11 +14,12 @@ namespace IHK_Transform
     public partial class Form1 : Form
     {
         private readonly AzubiController _azubiController;
+        private readonly string connectionString = "Server=localhost;Database=ihk_transformer;Uid=root;Pwd=;";
 
         public Form1()
         {
             InitializeComponent();
-            var sqlHelper = new ReadWrite_SQL("Server=localhost;Database=ihk_transform;Uid=root;Pwd=;");
+            var sqlHelper = new ReadWrite_SQL();
             var azubiService = new AzubiService(sqlHelper);
             _azubiController = new AzubiController(azubiService);
         }
@@ -30,7 +31,6 @@ namespace IHK_Transform
 
         private void btnLoadSQL_Click(object sender, EventArgs e)
         {
-            string connectionString = "Server=localhost;Database=ihk_transform;Uid=root;Pwd=;";
             var sqlHelper = new ReadWrite_SQL(connectionString);
 
             _azubiController.LoadDataFromSQL(sqlHelper);
@@ -44,6 +44,14 @@ namespace IHK_Transform
             var csvHelper = new ReadWrite_CSV();
 
             _azubiController.LoadDataFromCSV(csvHelper);
+            var data = _azubiController.DisplayAzubis();
+            dgvAzubi.DataSource = data;
+        }
+
+        private void btnHierarchie_Click(object sender, EventArgs e)
+        {
+            var hierachicalHelper = new ReadWrite_Hierarchie();
+            _azubiController.LoadDataFromHierarchical(hierachicalHelper);
             var data = _azubiController.DisplayAzubis();
             dgvAzubi.DataSource = data;
         }

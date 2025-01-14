@@ -9,8 +9,6 @@ namespace IHK_Transform
 {
     internal class AzubiController
     {
-        // private readonly AzubiService _azubiService;
-
         private List<Azubi> _azubis;
         private List<Ausbilder> _ausbilder;
         private List<Ausbildung> _ausbildung;
@@ -22,11 +20,6 @@ namespace IHK_Transform
             _ausbildung = new List<Ausbildung>();
         }
 
-        // public List<Azubi> GetAzubi()
-        // {
-        //     return _azubiService.GetAzubi();
-        // }
-
         public void LoadDataFromSQL(ReadWrite_SQL sqlHelper)
         {
             _azubis = sqlHelper.GetAzubi();
@@ -36,29 +29,20 @@ namespace IHK_Transform
 
         public void LoadDataFromCSV(ReadWrite_CSV csvHelper)
         {
-            csvHelper.LoadAzubiData();
-            csvHelper.LoadAusbilderData();
-            csvHelper.LoadAusbildungData();
+            csvHelper.ReadData();
 
             _azubis = csvHelper.GetAzubi();
             _ausbilder = csvHelper.GeAusbilder();
             _ausbildung = csvHelper.GetAusbildung();
         }
 
-        /*public void DisplayAzubis()
+        public void LoadDataFromHierarchical(ReadWrite_Hierarchie hierachicalHelper)
         {
-            var azubis = _azubiService.GetAzubi();
-            var ausbilder = _azubiService.GetAusbilder();
-            var ausbildung = _azubiService.GetAusbildung();
-
-            foreach (var azubi in azubis)
-            {
-                var ausbilderName = ausbilder.FirstOrDefault(a => a.getAusbilderID() == azubi.getAzubiID());
-                var beruf = ausbildung.FirstOrDefault(b => b.getAusbildungID() == azubi.getAusbildungID());
-
-                Debug.WriteLine($"Azubi: {azubi.getVorname()} {azubi.getNachname()} - Ausbilder: {ausbilderName} - Beruf: {beruf}");
-            }
-        }*/
+            hierachicalHelper.LoadHierarchicalData();
+            _azubis = hierachicalHelper.GetAzubi();
+            _ausbilder = hierachicalHelper.GetAusbilder();
+            _ausbildung = hierachicalHelper.GetAusbildung();
+        }
 
         public List<object> DisplayAzubis()
         {
@@ -71,12 +55,12 @@ namespace IHK_Transform
                 var beruf = _ausbildung.FirstOrDefault(b => b.getAusbildungID() == azubi.getAusbildungID());
 
                 var ausbildungsberuf = beruf != null
-                    ? $"{beruf.getKurzbezeichnung()}{azubi.getAusbildungsbeginn()}"
-                    : "Unbekannt";
+                    ? $"{beruf.getAusbildungID()}{azubi.getAusbildungsbeginn().ToString("yy")}"
+                    : "NULL";
 
                 var ausbilderFullName = ausbilderName != null
                     ? $"{ausbilderName.getVorname()} {ausbilderName.getNachname()}"
-                    : "Unbekannt";
+                    : "NULL";
 
                 data.Add(new
                 {
