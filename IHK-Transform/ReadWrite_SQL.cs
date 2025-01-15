@@ -90,7 +90,7 @@ namespace IHK_Transform
                     {
                         var ausbildung = new Ausbildung();
                         ausbildung.setAusbildungID(reader.GetString("ausbildung_id"));
-                        ausbildung.setAusbildung(reader.GetString("ausbildung"));
+                        ausbildung.setAusbildung(reader.GetString("bezeichnung"));
                         list.Add(ausbildung);
                     }
                 }

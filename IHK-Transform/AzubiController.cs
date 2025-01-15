@@ -38,7 +38,8 @@ namespace IHK_Transform
 
         public void LoadDataFromHierarchical(ReadWrite_Hierarchie hierachicalHelper)
         {
-            hierachicalHelper.LoadHierarchicalData();
+            hierachicalHelper.ReadData();
+
             _azubis = hierachicalHelper.GetAzubi();
             _ausbilder = hierachicalHelper.GetAusbilder();
             _ausbildung = hierachicalHelper.GetAusbildung();

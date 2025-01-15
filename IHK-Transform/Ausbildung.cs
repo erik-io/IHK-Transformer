@@ -12,14 +12,14 @@ namespace IHK_Transform
         {
         }
 
-        public Ausbildung(string ausbildungID, string ausbildung)
+        public Ausbildung(string ausbildungID, string bezeichnung)
         {
             _ausbildung_id = ausbildungID;
-            _ausbildung = ausbildung;
+            _bezeichnung = bezeichnung;
         }
 
         private string _ausbildung_id { get; set; }
-        private string _ausbildung { get; set; }
+        private string _bezeichnung { get; set; }
 
         public string getAusbildungID()
         {
@@ -33,12 +33,12 @@ namespace IHK_Transform
 
         public string getAusbildung()
         {
-            return _ausbildung;
+            return _bezeichnung;
         }
 
-        public void setAusbildung(string berufsbezeichnung)
+        public void setAusbildung(string bezeichnung)
         {
-            _ausbildung = berufsbezeichnung;
+            _bezeichnung = bezeichnung;
         }
 
         public override string ToString()

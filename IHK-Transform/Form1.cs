@@ -51,6 +51,7 @@ namespace IHK_Transform
         private void btnHierarchie_Click(object sender, EventArgs e)
         {
             var hierachicalHelper = new ReadWrite_Hierarchie();
+
             _azubiController.LoadDataFromHierarchical(hierachicalHelper);
             var data = _azubiController.DisplayAzubis();
             dgvAzubi.DataSource = data;

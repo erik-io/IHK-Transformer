@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 namespace IHK_Transform
 {
-    internal class ReadWrite_CSV
+    internal class ReadWrite_CSV : DataHandler
     {
         private List<Azubi> _azubis;
         private List<Ausbilder> _ausbilder;
@@ -88,7 +88,7 @@ namespace IHK_Transform
         public List<Ausbilder> GeAusbilder() => _ausbilder;
         public List<Ausbildung> GetAusbildung() => _ausbildungen;
 
-        public void ReadData()
+        public override object ReadData()
         {
             string rootPath = AppDomain.CurrentDomain.BaseDirectory;
 
@@ -147,6 +147,13 @@ namespace IHK_Transform
                     }
                 }
             }
+
+            return new
+            {
+                Azubis = _azubis,
+                Ausbilder = _ausbilder,
+                Ausbildungen = _ausbildungen
+            };
         }
     }
 }

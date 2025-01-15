@@ -10,7 +10,7 @@ USE ihk_transformer;
 -- Tabelle: Ausbildungen
 CREATE TABLE Ausbildungen(
     ausbildung_id varchar(4) PRIMARY KEY NOT NULL,
-    ausbildung varchar(50) NOT NULL
+    bezeichnung varchar(50) NOT NULL
 );
 
 -- Tabelle: Ausbilder
@@ -39,7 +39,7 @@ INSERT INTO `ausbilder` (`ausbilder_id`, `vorname`, `nachname`) VALUES
 (101, 'Christian', 'Böttcher');
 
 -- Daten einfügen in Ausbildungen
-INSERT INTO `ausbildungen` (`ausbildung_id`, `ausbildung`) VALUES
+INSERT INTO `ausbildungen` (`ausbildung_id`, `bezeichnung`) VALUES
 ('FIAN', 'Fachfinformatiker für Anwendungsentwicklung');
 
 -- Daten einfügen in Azubis

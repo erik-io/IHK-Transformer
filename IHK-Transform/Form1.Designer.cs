@@ -40,12 +40,12 @@
             this.dgvAzubi.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvAzubi.Location = new System.Drawing.Point(12, 12);
             this.dgvAzubi.Name = "dgvAzubi";
-            this.dgvAzubi.Size = new System.Drawing.Size(240, 150);
+            this.dgvAzubi.Size = new System.Drawing.Size(695, 426);
             this.dgvAzubi.TabIndex = 0;
             // 
             // btnLoadSQL
             // 
-            this.btnLoadSQL.Location = new System.Drawing.Point(333, 41);
+            this.btnLoadSQL.Location = new System.Drawing.Point(713, 12);
             this.btnLoadSQL.Name = "btnLoadSQL";
             this.btnLoadSQL.Size = new System.Drawing.Size(75, 23);
             this.btnLoadSQL.TabIndex = 1;
@@ -55,7 +55,7 @@
             // 
             // btnLoadCSV
             // 
-            this.btnLoadCSV.Location = new System.Drawing.Point(333, 71);
+            this.btnLoadCSV.Location = new System.Drawing.Point(713, 42);
             this.btnLoadCSV.Name = "btnLoadCSV";
             this.btnLoadCSV.Size = new System.Drawing.Size(75, 23);
             this.btnLoadCSV.TabIndex = 2;
@@ -65,7 +65,7 @@
             // 
             // btnHierarchie
             // 
-            this.btnHierarchie.Location = new System.Drawing.Point(333, 101);
+            this.btnHierarchie.Location = new System.Drawing.Point(713, 72);
             this.btnHierarchie.Name = "btnHierarchie";
             this.btnHierarchie.Size = new System.Drawing.Size(75, 23);
             this.btnHierarchie.TabIndex = 3;
