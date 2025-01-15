@@ -17,9 +17,20 @@ namespace IHK_Transform
         {
         }
 
+        public ReadWrite_SQL(IniReader iniReader)
+        {
+            string server = iniReader.GetData("SQL", "server");
+            string port = iniReader.GetData("SQL", "port");
+            string database = iniReader.GetData("SQL", "database");
+            string user = iniReader.GetData("SQL", "user");
+            string password = iniReader.GetData("SQL", "password");
+
+            _connectionString = $"Server={server},Port={port};Database={database};User Id={user};Password={password};";
+        }
+
         public ReadWrite_SQL(string connectionString)
         {
-            _connectionString = connectionString;
+             _connectionString = connectionString;
         }
 
         private MySqlConnection GetConnection()

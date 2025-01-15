@@ -118,6 +118,7 @@
     <Compile Include="ReadWrite_CSV.cs" />
     <Compile Include="ReadWrite_Hierarchie.cs" />
     <Compile Include="ReadWrite_SQL.cs" />
+    <Compile Include="IniReader.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
@@ -143,6 +144,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="config.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
