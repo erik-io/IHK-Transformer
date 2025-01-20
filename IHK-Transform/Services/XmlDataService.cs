@@ -14,25 +14,10 @@ namespace IHK_Transform.Services
 {
     internal class XmlDataService
     {
-        private List<Azubi> _azubis;
-        private List<Ausbilder> _ausbilder;
-        private List<Ausbildung> _ausbildungen; 
+        private List<Azubi> _azubis = new List<Azubi>();
+        private List<Ausbilder> _ausbilder = new List<Ausbilder>();
+        private List<Ausbildung> _ausbildungen = new List<Ausbildung>(); 
         private string _filePath;
-
-        public XmlDataService()
-        {
-            _azubis = new List<Azubi>();
-            _ausbilder = new List<Ausbilder>();
-            _ausbildungen = new List<Ausbildung>();
-        }
-
-        public XmlDataService(string filePath)
-        {
-            _filePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
-            _azubis = new List<Azubi>();
-            _ausbilder = new List<Ausbilder>();
-            _ausbildungen = new List<Ausbildung>();
-        }
 
         public void SetFilePath(string filePath)
         {
@@ -111,8 +96,8 @@ namespace IHK_Transform.Services
             }
         }
 
-        public List<Azubi> GetAzubi() => _azubis;
-        public List<Ausbilder> GetAusbilder() => _ausbilder;
-        public List<Ausbildung> GetAusbildung() => _ausbildungen;
+        public List<Azubi> GetAzubiData() => _azubis;
+        public List<Ausbilder> GetAusbilderData() => _ausbilder;
+        public List<Ausbildung> GetAusbildungData() => _ausbildungen;
     }
 }

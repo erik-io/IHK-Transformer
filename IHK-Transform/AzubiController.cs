@@ -22,25 +22,25 @@ namespace IHK_Transform
             _ausbildung = new List<Ausbildung>();
         }
 
-        public void LoadDataFromSQL(ReadWrite_SQL sqlHelper)
+        public void LoadDataFromSQL(SqlDataService sqlDataService)
         {
-            _azubis = sqlHelper.GetAzubi();
-            _ausbilder = sqlHelper.GetAusbilder();
-            _ausbildung = sqlHelper.GetAusbildung();
+            _azubis = sqlDataService.GetAzubiData();
+            _ausbilder = sqlDataService.GetAusbilderData();
+            _ausbildung = sqlDataService.GetAusbildungData();
         }
 
         public void LoadDataFromCSV(CsvDataService csvDataService)
         {
-            _azubis = csvDataService.GetAzubi();
-            _ausbilder = csvDataService.GetAusbilder();
-            _ausbildung = csvDataService.GetAusbildung();
+            _azubis = csvDataService.GetAzubiData();
+            _ausbilder = csvDataService.GetAusbilderData();
+            _ausbildung = csvDataService.GetAusbildungData();
         }
 
         public void LoadDataFromXml(XmlDataService xmlDataService)
         {
-            _azubis = xmlDataService.GetAzubi();
-            _ausbilder = xmlDataService.GetAusbilder();
-            _ausbildung = xmlDataService.GetAusbildung();
+            _azubis = xmlDataService.GetAzubiData();
+            _ausbilder = xmlDataService.GetAusbilderData();
+            _ausbildung = xmlDataService.GetAusbildungData();
         }
 
         public List<object> DisplayAzubis()

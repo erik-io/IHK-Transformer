@@ -17,7 +17,6 @@ namespace IHK_Transform
     public partial class Form1 : Form
     {
         private readonly AzubiController _azubiController;
-        private ReadWrite_SQL sqlHandler;
         private XmlDataService _xmlDataService;
         private CsvDataService _csvDataService;
         private readonly FileHandler _fileHandler;
@@ -28,8 +27,7 @@ namespace IHK_Transform
             _csvDataService = new CsvDataService();
             _fileHandler = new FileHandler(_xmlDataService, _csvDataService);
 
-            var sqlHelper = new ReadWrite_SQL();
-            var azubiService = new AzubiService(sqlHelper);
+            var azubiService = new AzubiService();
             _azubiController = new AzubiController(azubiService);
             InitializeComponent();
             InitializeHandlers();
@@ -40,7 +38,6 @@ namespace IHK_Transform
             try
             {
                 var iniReader = new IniReader("config.ini");
-                sqlHandler = new ReadWrite_SQL(iniReader);
             }
             catch (Exception ex)
             {
@@ -56,13 +53,26 @@ namespace IHK_Transform
 
         private void btnLoadSQL_Click(object sender, EventArgs e)
         {
-            var iniReader = new IniReader("config.ini");
-            var sqlHelper = new ReadWrite_SQL(iniReader);
+            try
+            {
+                var iniReader = new IniReader("config.ini");
+                var sqlDataService = new SqlDataService(iniReader);
 
-            _azubiController.LoadDataFromSQL(sqlHelper);
+                sqlDataService.LoadAzubiData();
+                sqlDataService.LoadAusbilderData();
+                sqlDataService.LoadAusbildungData();
 
-            var data = _azubiController.DisplayAzubis();
-            dgvAzubi.DataSource = data;
+                _azubiController.LoadDataFromSQL(sqlDataService);
+
+                var data = _azubiController.DisplayAzubis();
+                dgvAzubi.DataSource = data;
+
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+                throw;
+            }
         }
 
         private void btnLoadCSV_Click(object sender, EventArgs e)

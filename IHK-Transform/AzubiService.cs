@@ -9,7 +9,7 @@ namespace IHK_Transform
 {
     internal class AzubiService
     {
-        public AzubiService(ReadWrite_SQL sqlHelper)
+        public AzubiService()
         {
             
         }
