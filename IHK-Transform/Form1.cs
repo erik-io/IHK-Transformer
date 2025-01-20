@@ -58,9 +58,7 @@ namespace IHK_Transform
                 var iniReader = new IniReader("config.ini");
                 var sqlDataService = new SqlDataService(iniReader);
 
-                sqlDataService.LoadAzubiData();
-                sqlDataService.LoadAusbilderData();
-                sqlDataService.LoadAusbildungData();
+                sqlDataService.LoadData();
 
                 _azubiController.LoadDataFromSQL(sqlDataService);
 

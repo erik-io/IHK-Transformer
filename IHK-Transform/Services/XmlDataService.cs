@@ -12,11 +12,11 @@ using IHK_Transform.Models;
 
 namespace IHK_Transform.Services
 {
-    internal class XmlDataService
+    internal class XmlDataService : DataHandler
     {
-        private List<Azubi> _azubis = new List<Azubi>();
-        private List<Ausbilder> _ausbilder = new List<Ausbilder>();
-        private List<Ausbildung> _ausbildungen = new List<Ausbildung>(); 
+        // private List<Azubi> _azubis = new List<Azubi>();
+        // private List<Ausbilder> _ausbilder = new List<Ausbilder>();
+        // private List<Ausbildung> _ausbildungen = new List<Ausbildung>(); 
         private string _filePath;
 
         public void SetFilePath(string filePath)
@@ -24,7 +24,7 @@ namespace IHK_Transform.Services
             _filePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
         }
 
-        public void LoadData()
+        public override void LoadData()
         {
             if (string.IsNullOrWhiteSpace(_filePath))
                 throw new InvalidOperationException("Die Datei wurde nicht gefunden oder der Pfad ist leer.");
@@ -96,8 +96,8 @@ namespace IHK_Transform.Services
             }
         }
 
-        public List<Azubi> GetAzubiData() => _azubis;
-        public List<Ausbilder> GetAusbilderData() => _ausbilder;
-        public List<Ausbildung> GetAusbildungData() => _ausbildungen;
+        // public List<Azubi> GetAzubiData() => _azubis;
+        // public List<Ausbilder> GetAusbilderData() => _ausbilder;
+        // public List<Ausbildung> GetAusbildungData() => _ausbildungen;
     }
 }

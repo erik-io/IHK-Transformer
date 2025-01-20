@@ -7,14 +7,15 @@ using System.Text;
 using System.Threading.Tasks;
 using IHK_Transform;
 using System.Diagnostics;
+using IHK_Transform.Utilities;
 
 namespace IHK_Transform.Services
 {
-    internal class SqlDataService
+    internal class SqlDataService : DataHandler
     {
-        private List<Azubi> _azubis = new List<Azubi>();
-        private List<Ausbilder> _ausbilder = new List<Ausbilder>();
-        private List<Ausbildung> _ausbildungen = new List<Ausbildung>();
+        // private List<Azubi> _azubis = new List<Azubi>();
+        // private List<Ausbilder> _ausbilder = new List<Ausbilder>();
+        // private List<Ausbildung> _ausbildungen = new List<Ausbildung>();
         private readonly string _connectionString;
 
         public SqlDataService(IniReader iniReader)
@@ -27,12 +28,24 @@ namespace IHK_Transform.Services
             _connectionString = $"Server={server},Port={port};Database={database};User Id={user};Password={password};";
         }
 
+        public void SetFilePath(string filePath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void LoadData()
+        {
+            LoadAzubiData();
+            LoadAusbilderData();
+            LoadAusbildungData();
+        }
+
         private MySqlConnection GetConnection()
         {
             return new MySqlConnection(_connectionString);
         }
 
-        public void LoadAzubiData()
+        private void LoadAzubiData()
         {
             using (MySqlConnection conn = GetConnection())
             {
@@ -63,7 +76,7 @@ namespace IHK_Transform.Services
             }
         }
 
-        public void LoadAusbilderData()
+        private void LoadAusbilderData()
         {
             using (MySqlConnection conn = GetConnection())
             {
@@ -90,7 +103,7 @@ namespace IHK_Transform.Services
             }
         }
 
-        public void LoadAusbildungData()
+        private void LoadAusbildungData()
         {
             using (MySqlConnection conn = GetConnection())
             {
@@ -115,8 +128,8 @@ namespace IHK_Transform.Services
             }
         }
 
-        public List<Azubi> GetAzubiData() => _azubis;
-        public List<Ausbilder> GetAusbilderData() => _ausbilder;
-        public List<Ausbildung> GetAusbildungData() => _ausbildungen;
+        // public List<Azubi> GetAzubiData() => _azubis;
+        // public List<Ausbilder> GetAusbilderData() => _ausbilder;
+        // public List<Ausbildung> GetAusbildungData() => _ausbildungen;
     }
 }
