@@ -101,9 +101,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Ausbilder.cs" />
-    <Compile Include="Ausbildung.cs" />
-    <Compile Include="Azubi.cs" />
+    <Compile Include="Models\Ausbilder.cs" />
+    <Compile Include="Models\Ausbildung.cs" />
+    <Compile Include="Models\Azubi.cs" />
     <Compile Include="AzubiController.cs" />
     <Compile Include="AzubiService.cs" />
     <Compile Include="DataHandler.cs" />
@@ -115,10 +115,11 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ReadWrite_CSV.cs" />
-    <Compile Include="ReadWrite_Hierarchie.cs" />
     <Compile Include="ReadWrite_SQL.cs" />
     <Compile Include="IniReader.cs" />
+    <Compile Include="Services\CsvDataService.cs" />
+    <Compile Include="Services\XmlDataService.cs" />
+    <Compile Include="Utilities\FileHandler.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
@@ -131,6 +132,7 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <None Include="data\data.csv" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -149,6 +151,11 @@
     <None Include="config.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Content Include="data\data.xml" />
+    <Content Include="data\data.sql" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

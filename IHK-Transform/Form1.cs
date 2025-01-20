@@ -9,17 +9,25 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using IHK_Transform.Services;
+using IHK_Transform.Utilities;
 
 namespace IHK_Transform
 {
     public partial class Form1 : Form
     {
         private readonly AzubiController _azubiController;
-        // private readonly string connectionString = "Server=localhost;Database=ihk_transformer;Uid=root;Pwd=;";
         private ReadWrite_SQL sqlHandler;
+        private XmlDataService _xmlDataService;
+        private CsvDataService _csvDataService;
+        private readonly FileHandler _fileHandler;
 
         public Form1()
         {
+            _xmlDataService = new XmlDataService();
+            _csvDataService = new CsvDataService();
+            _fileHandler = new FileHandler(_xmlDataService, _csvDataService);
+
             var sqlHelper = new ReadWrite_SQL();
             var azubiService = new AzubiService(sqlHelper);
             _azubiController = new AzubiController(azubiService);
@@ -59,18 +67,16 @@ namespace IHK_Transform
 
         private void btnLoadCSV_Click(object sender, EventArgs e)
         {
-            var csvHelper = new ReadWrite_CSV();
-
-            _azubiController.LoadDataFromCSV(csvHelper);
+            _fileHandler.LoadData("csv");
+            _azubiController.LoadDataFromCSV(_csvDataService);
             var data = _azubiController.DisplayAzubis();
             dgvAzubi.DataSource = data;
         }
 
-        private void btnHierarchie_Click(object sender, EventArgs e)
+        private void btnLoadXML_Click(object sender, EventArgs e)
         {
-            var hierachicalHelper = new ReadWrite_Hierarchie();
-
-            _azubiController.LoadDataFromHierarchical(hierachicalHelper);
+            _fileHandler.LoadData("xml");
+            _azubiController.LoadDataFromXml(_xmlDataService);
             var data = _azubiController.DisplayAzubis();
             dgvAzubi.DataSource = data;
         }

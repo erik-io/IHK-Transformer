@@ -1,3 +1,10 @@
+[Ausbilder]
+ausbilder_id;vorname;nachname
+101;Christian;Böttcher
+[Ausbildungen]
+ausbildung_id;bezeichnung
+FIAN;Fachinformatiker für Anwendungsentwicklung
+[Azubis]
 azubi_id;vorname;nachname;ausbildungsbeginn;ausbildung_id;ausbilder_id
 1;Mert;Kuyumcuoglu;2023-09-01;FIAN;101
 2;Michel;Pörschke;2023-09-01;FIAN;101

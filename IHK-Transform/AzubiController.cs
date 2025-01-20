@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using IHK_Transform.Models;
+using IHK_Transform.Services;
 
 namespace IHK_Transform
 {
@@ -27,22 +29,18 @@ namespace IHK_Transform
             _ausbildung = sqlHelper.GetAusbildung();
         }
 
-        public void LoadDataFromCSV(ReadWrite_CSV csvHelper)
+        public void LoadDataFromCSV(CsvDataService csvDataService)
         {
-            csvHelper.ReadData();
-
-            _azubis = csvHelper.GetAzubi();
-            _ausbilder = csvHelper.GeAusbilder();
-            _ausbildung = csvHelper.GetAusbildung();
+            _azubis = csvDataService.GetAzubi();
+            _ausbilder = csvDataService.GetAusbilder();
+            _ausbildung = csvDataService.GetAusbildung();
         }
 
-        public void LoadDataFromHierarchical(ReadWrite_Hierarchie hierachicalHelper)
+        public void LoadDataFromXml(XmlDataService xmlDataService)
         {
-            hierachicalHelper.ReadData();
-
-            _azubis = hierachicalHelper.GetAzubi();
-            _ausbilder = hierachicalHelper.GetAusbilder();
-            _ausbildung = hierachicalHelper.GetAusbildung();
+            _azubis = xmlDataService.GetAzubi();
+            _ausbilder = xmlDataService.GetAusbilder();
+            _ausbildung = xmlDataService.GetAusbildung();
         }
 
         public List<object> DisplayAzubis()
