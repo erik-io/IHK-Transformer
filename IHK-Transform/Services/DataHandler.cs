@@ -22,7 +22,7 @@ namespace IHK_Transform.Services
 
         public virtual object ReadData()
         {
-            //zuerst auslesen aller Datanhalterunegn, dann aufruf der GetData
+            //zuerst auslesen aller Datanhalterunegn, dann aufruf der GetValue
             //diese gibt dann die Datanhaltung als object zurück
             object t = null;
 

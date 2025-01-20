@@ -20,11 +20,11 @@ namespace IHK_Transform.Services
 
         public SqlDataService(IniReader iniReader)
         {
-            string server = iniReader.GetData("SQL", "server");
-            string port = iniReader.GetData("SQL", "port");
-            string database = iniReader.GetData("SQL", "database");
-            string user = iniReader.GetData("SQL", "user");
-            string password = iniReader.GetData("SQL", "password");
+            string server = iniReader.GetValue("SQL", "server");
+            string port = iniReader.GetValue("SQL", "port");
+            string database = iniReader.GetValue("SQL", "database");
+            string user = iniReader.GetValue("SQL", "user");
+            string password = iniReader.GetValue("SQL", "password");
             _connectionString = $"Server={server},Port={port};Database={database};User Id={user};Password={password};";
         }
 

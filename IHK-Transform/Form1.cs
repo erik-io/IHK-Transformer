@@ -75,10 +75,23 @@ namespace IHK_Transform
 
         private void btnLoadCSV_Click(object sender, EventArgs e)
         {
-            _fileHandler.LoadData("csv");
-            _azubiController.LoadDataFromCSV(_csvDataService);
-            var data = _azubiController.DisplayAzubis();
-            dgvAzubi.DataSource = data;
+            try
+            {
+                var iniReader = new IniReader("config.ini");
+                string delimiterStr = iniReader.GetValue("CSV", "delimiter");
+                char delimiter = string.IsNullOrWhiteSpace(delimiterStr) ? ';' : delimiterStr[0];
+
+                _csvDataService.SetDelimiter(delimiter);
+                _fileHandler.LoadData("csv");
+                _azubiController.LoadDataFromCSV(_csvDataService);
+                var data = _azubiController.DisplayAzubis();
+                dgvAzubi.DataSource = data;
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+                throw;
+            }
         }
 
         private void btnLoadXML_Click(object sender, EventArgs e)

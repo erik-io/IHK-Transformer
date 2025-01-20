@@ -10,15 +10,17 @@ namespace IHK_Transform.Services
 {
     internal class CsvDataService : DataHandler
     {
-        // private List<Azubi> _azubis = new List<Azubi>();
-        // private List<Ausbilder> _ausbilder = new List<Ausbilder>();
-        // private List<Ausbildung> _ausbildungen = new List<Ausbildung>();
         private string _filePath;
-
+        private char _delimiter = ';';
 
         public void SetFilePath(string filePath)
         {
             _filePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
+        }
+
+        public void SetDelimiter(char delimiter)
+        {
+            _delimiter = delimiter;
         }
 
         public override void LoadData()
@@ -41,7 +43,7 @@ namespace IHK_Transform.Services
 
             for (int i = startIndex + 2; i < lines.Length && !lines[i].StartsWith("["); i++)
             {
-                string[] data = lines[i].Split(';');
+                string[] data = lines[i].Split(_delimiter);
                 if (data.Length >= 6)
                 {
                     var azubi = new Azubi(
@@ -67,7 +69,7 @@ namespace IHK_Transform.Services
 
             for (int i = startIndex + 2; i < lines.Length && !lines[i].StartsWith("["); i++)
             {
-                string[] data = lines[i].Split(';');
+                string[] data = lines[i].Split(_delimiter);
                 if (data.Length >= 3)
                 {
                     var ausbilder = new Ausbilder(
@@ -90,7 +92,7 @@ namespace IHK_Transform.Services
 
             for (int i = startIndex + 2; i < lines.Length && !lines[i].StartsWith("["); i++)
             {
-                string[] data = lines[i].Split(';');
+                string[] data = lines[i].Split(_delimiter);
                 if (data.Length >= 2)
                 {
                     var ausbildung = new Ausbildung(
@@ -101,9 +103,5 @@ namespace IHK_Transform.Services
                 }
             }
         }
-
-        // public List<Azubi> GetAzubiData() => _azubis;
-        // public List<Ausbilder> GetAusbilderData() => _ausbilder;
-        // public List<Ausbildung> GetAusbildungData() => _ausbildungen;
     }
 }

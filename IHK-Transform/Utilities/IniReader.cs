@@ -12,10 +12,10 @@ namespace IHK_Transform.Utilities
             if (!File.Exists(filePath))
                 throw new FileNotFoundException("Die angegebene .ini-Datei wurde nicht gefunden.", filePath);
 
-            ReadData(filePath);
+            LoadData(filePath);
         }
 
-        private void ReadData(string filePath)
+        private void LoadData(string filePath)
         {
             string currentSection = null;
 
@@ -45,7 +45,7 @@ namespace IHK_Transform.Utilities
             }
         }
 
-        public string GetData(string section, string key)
+        public string GetValue(string section, string key)
         {
             return sections.ContainsKey(section) && sections[section].ContainsKey(key)
                 ? sections[section][key]
