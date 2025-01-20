@@ -1,5 +1,11 @@
 # IHK-Transformer
-
+## Roadmap
+- [x] Datenhaltung über CSV und SQL
+- [x] Grundlegende GUI-Funktionalität
+- [x] Erweiterung der Datenhaltung um XML
+- [ ] Funktionen zum Bearbeiten und Speichern von Daten integrieren
+- [ ] Vollständige Implementierung der Konfigurationsdatei
+- [ ] Verbesserung der Benutzeroberfläche für ein ansprechenderes Design
 ## Diagramme und Mockups
 
 ### Use-Case-Diagramm
