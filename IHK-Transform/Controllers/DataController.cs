@@ -9,13 +9,13 @@ using IHK_Transform.Services;
 
 namespace IHK_Transform
 {
-    internal class AzubiController
+    internal class DataController
     {
         private List<Azubi> _azubis;
         private List<Ausbilder> _ausbilder;
         private List<Ausbildung> _ausbildung;
 
-        public AzubiController(AzubiService azubiService)
+        public DataController(DataService dataService)
         {
             _azubis = new List<Azubi>();
             _ausbilder = new List<Ausbilder>();

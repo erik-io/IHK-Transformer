@@ -7,9 +7,9 @@ using IHK_Transform.Models;
 
 namespace IHK_Transform
 {
-    internal class AzubiService
+    internal class DataService
     {
-        public AzubiService()
+        public DataService()
         {
             
         }
