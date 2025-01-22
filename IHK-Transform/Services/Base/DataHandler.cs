@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using IHK_Transform.Models;
+using IHK_Transform.Models.Entities;
 
 namespace IHK_Transform.Services
 {

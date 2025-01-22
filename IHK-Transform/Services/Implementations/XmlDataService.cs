@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using IHK_Transform.Models;
+using IHK_Transform.Models.Entities;
 
 namespace IHK_Transform.Services
 {

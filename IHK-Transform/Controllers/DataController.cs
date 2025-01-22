@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using IHK_Transform.Models;
+using IHK_Transform.Models.Entities;
 using IHK_Transform.Services;
 
-namespace IHK_Transform
+namespace IHK_Transform.Controllers
 {
     internal class DataController
     {

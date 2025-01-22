@@ -1,55 +1,143 @@
-﻿namespace IHK_Transform.Models
+﻿using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+
+namespace IHK_Transform.Models.Entities
 {
-    internal class Ausbilder
+    /// <summary>
+    /// Repräsentiert einen Ausbilder im System.
+    /// Implementiert INotifyPropertyChanged, für die GUI-Aktualisierung.
+    /// </summary>
+    internal class Ausbilder : INotifyPropertyChanged
     {
+        private int _ausbilderId;
+        private string _vorname;
+        private string _nachname;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>
+        /// Standardkonstruktor für einen neuen Ausbilder
+        /// </summary>
         public Ausbilder()
         {
         }
 
-        public Ausbilder(int ausbilderID, string vorname, string nachname)
+        /// <summary>
+        /// Konstruktor mit allen erforderlichen Daten
+        /// </summary>
+        public Ausbilder(int ausbilderId, string vorname, string nachname)
         {
-            _ausbilder_id = ausbilderID;
-            _vorname = vorname;
-            _nachname = nachname;
+            AusbilderId = ausbilderId;
+            Vorname = vorname;
+            Nachname = nachname;
         }
 
-        private int _ausbilder_id { get; set; }
-        private string _vorname { get; set; }
-        private string _nachname { get; set; }
-
-        public int getAusbilderID()
+        public int AusbilderId
         {
-            return _ausbilder_id;
+            get => _ausbilderId;
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentException("Ausbilder-ID muss größer als 0 sein.");
+                SetProperty(ref _ausbilderId, value);
+            }
         }
 
-        public void setAusbilderID(int ausbilderID)
+        public string Vorname
         {
-            _ausbilder_id = ausbilderID;
+            get => _vorname;
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("Vorname darf nicht leer sein.");
+                SetProperty(ref _vorname, value.Trim());
+            }
         }
 
-        public string getVorname()
+        public string Nachname
         {
-            return _vorname;
+            get => _nachname;
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("Nachname darf nicht leer sein.");
+                SetProperty(ref _nachname, value.Trim());
+            }
         }
 
-        public void setVorname(string vorname)
+        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
         {
-            _vorname = vorname;
+            if (Equals(field, value)) return false;
+            field = value;
+            OnPropertyChanged(propertyName);
+            return true;
         }
 
-        public string getNachname()
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
-            return _nachname;
-        }
-
-        public void setNachname(string nachname)
-        {
-            _nachname = nachname;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         public override string ToString()
         {
-            return _vorname + " " + _nachname;
+            return $"{Vorname} {Nachname}";
         }
+
+        // Übergangsmethoden
+        public int getAusbilderID() => AusbilderId;
+        public string getVorname() => Vorname;
+        public string getNachname() => Nachname;
     }
-}
+
+    /*public Ausbilder()
+    {
+    }
+
+    public Ausbilder(int ausbilderID, string vorname, string nachname)
+    {
+        _ausbilder_id = ausbilderID;
+        _vorname = vorname;
+        _nachname = nachname;
+    }
+
+    private int _ausbilder_id { get; set; }
+    private string _vorname { get; set; }
+    private string _nachname { get; set; }
+
+    public int getAusbilderID()
+    {
+        return _ausbilder_id;
+    }
+
+    public void setAusbilderID(int ausbilderID)
+    {
+        _ausbilder_id = ausbilderID;
+    }
+
+    public string getVorname()
+    {
+        return _vorname;
+    }
+
+    public void setVorname(string vorname)
+    {
+        _vorname = vorname;
+    }
+
+    public string getNachname()
+    {
+        return _nachname;
+    }
+
+    public void setNachname(string nachname)
+    {
+        _nachname = nachname;
+    }
+
+    public override string ToString()
+    {
+        return _vorname + " " + _nachname;
+    }
+}*/
+    }

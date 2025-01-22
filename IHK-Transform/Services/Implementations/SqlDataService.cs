@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using IHK_Transform;
 using System.Diagnostics;
+using IHK_Transform.Models.Entities;
 using IHK_Transform.Utilities;
 
 namespace IHK_Transform.Services

@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using IHK_Transform.Models;
+using IHK_Transform.Models.Entities;
 
 namespace IHK_Transform.Services.Interfaces
 {
-    internal interface IDataProvider : IDataHandler
+    internal interface IDataProvider //: IDataHandler
     {
         // Grundlegende Provider-Operationen
         void SetFilePath(string filePath);
