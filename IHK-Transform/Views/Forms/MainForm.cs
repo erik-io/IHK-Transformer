@@ -14,21 +14,21 @@ using IHK_Transform.Utilities;
 
 namespace IHK_Transform
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
-        private readonly AzubiController _azubiController;
+        private readonly DataController _dataController;
         private XmlDataService _xmlDataService;
         private CsvDataService _csvDataService;
         private readonly FileHandler _fileHandler;
 
-        public Form1()
+        public MainForm()
         {
             _xmlDataService = new XmlDataService();
             _csvDataService = new CsvDataService();
             _fileHandler = new FileHandler(_xmlDataService, _csvDataService);
 
-            var azubiService = new AzubiService();
-            _azubiController = new AzubiController(azubiService);
+            var dataService = new DataService();
+            _dataController = new DataController(dataService);
             InitializeComponent();
             InitializeHandlers();
         }
@@ -37,7 +37,7 @@ namespace IHK_Transform
         {
             try
             {
-                var iniReader = new IniReader("config.ini");
+                var iniReader = new IniReader("Config/config.ini");
             }
             catch (Exception ex)
             {
@@ -55,14 +55,14 @@ namespace IHK_Transform
         {
             try
             {
-                var iniReader = new IniReader("config.ini");
+                var iniReader = new IniReader("Config/config.ini");
                 var sqlDataService = new SqlDataService(iniReader);
 
                 sqlDataService.LoadData();
 
-                _azubiController.LoadDataFromSQL(sqlDataService);
+                _dataController.LoadDataFromSQL(sqlDataService);
 
-                var data = _azubiController.DisplayAzubis();
+                var data = _dataController.DisplayAzubis();
                 dgvAzubi.DataSource = data;
 
             }
@@ -77,14 +77,14 @@ namespace IHK_Transform
         {
             try
             {
-                var iniReader = new IniReader("config.ini");
+                var iniReader = new IniReader("Config/config.ini");
                 string delimiterStr = iniReader.GetValue("CSV", "delimiter");
                 char delimiter = string.IsNullOrWhiteSpace(delimiterStr) ? ';' : delimiterStr[0];
 
                 _csvDataService.SetDelimiter(delimiter);
                 _fileHandler.LoadData("csv");
-                _azubiController.LoadDataFromCSV(_csvDataService);
-                var data = _azubiController.DisplayAzubis();
+                _dataController.LoadDataFromCSV(_csvDataService);
+                var data = _dataController.DisplayAzubis();
                 dgvAzubi.DataSource = data;
             }
             catch (Exception exception)
@@ -97,8 +97,8 @@ namespace IHK_Transform
         private void btnLoadXML_Click(object sender, EventArgs e)
         {
             _fileHandler.LoadData("xml");
-            _azubiController.LoadDataFromXml(_xmlDataService);
-            var data = _azubiController.DisplayAzubis();
+            _dataController.LoadDataFromXml(_xmlDataService);
+            var data = _dataController.DisplayAzubis();
             dgvAzubi.DataSource = data;
         }
     }
