@@ -17,24 +17,15 @@ namespace IHK_Transform.Views.Forms
         
         private readonly IDataController _dataController;
 
-        // private XmlDataService _xmlDataService;
-        // private CsvDataService _csvDataService;
-        // private readonly FileHandler _fileHandler;
-
         public MainForm(IDataController dataController)
         {
             _dataController = dataController;
             InitializeComponent();
-
             WireEvents();
         }
 
         private void WireEvents()
         {
-           btnLoadSQL.Click += (s, e) => LoadSqlDataRequested.Invoke(this, EventArgs.Empty);
-           btnLoadCSV.Click += (s, e) => LoadCsvDataRequested.Invoke(this, EventArgs.Empty);
-           btnLoadXML.Click += (s, e) => LoadXmlDataRequested.Invoke(this, EventArgs.Empty);
-
            _dataController.DataLoaded += (s, e) => ShowMessage("Daten erfolgreich geladen!", false);
            _dataController.ErrorOccurred += (s, msg) => ShowMessage(msg);
         }

@@ -51,7 +51,7 @@
             this.btnLoadSQL.TabIndex = 1;
             this.btnLoadSQL.Text = "SQL";
             this.btnLoadSQL.UseVisualStyleBackColor = true;
-            // this.btnLoadSQL.Click += new System.EventHandler(this.btnLoadSQL_Click);
+            this.btnLoadSQL.Click += new System.EventHandler(this.btnLoadSQL_Click);
             // 
             // btnLoadCSV
             // 
@@ -61,7 +61,7 @@
             this.btnLoadCSV.TabIndex = 2;
             this.btnLoadCSV.Text = "CSV";
             this.btnLoadCSV.UseVisualStyleBackColor = true;
-            /// this.btnLoadCSV.Click += new System.EventHandler(this.btnLoadCSV_Click);
+            this.btnLoadCSV.Click += new System.EventHandler(this.btnLoadCSV_Click);
             // 
             // btnLoadXML
             // 
@@ -71,7 +71,7 @@
             this.btnLoadXML.TabIndex = 3;
             this.btnLoadXML.Text = "XML";
             this.btnLoadXML.UseVisualStyleBackColor = true;
-            // this.btnLoadXML.Click += new System.EventHandler(this.btnLoadXML_Click);
+            this.btnLoadXML.Click += new System.EventHandler(this.btnLoadXML_Click);
             // 
             // MainForm
             // 

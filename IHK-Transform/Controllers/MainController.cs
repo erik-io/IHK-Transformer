@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using IHK_Transform.Controllers.Interfaces;
+using IHK_Transform.Infrastructure.Configuration;
 using IHK_Transform.Services;
 using IHK_Transform.Services.Implementations;
 using IHK_Transform.Services.Interfaces;
@@ -29,6 +30,34 @@ namespace IHK_Transform.Controllers
 
             _view.LoadCsvDataRequested += OnLoadCsvRequested;
             _view.LoadXmlDataRequested += OnLoadXmlRequested;
+            _view.LoadSqlDataRequested += OnLoadSqlRequested;
+        }
+
+        private void OnLoadSqlRequested(object sender, EventArgs e)
+        {
+            try
+            {
+                // SQL-Provider erstellen
+                var sqlProvider = DataProviderFactory.CreateProvider("sql", new IniReader("Config/config.ini"));
+
+                // Provider konfigurieren und verbinden
+                sqlProvider.Connect();
+
+                // Neuen DataController mit SQL-Provider erstellen
+                _dataController = new DataController(sqlProvider);
+                _dataController.InitializeDataSources();
+                _dataController.LoadData("sql");
+
+                Debug.WriteLine("SQL-Daten werden geladen.");
+
+                // Daten im Grid anzeigen
+                _view.DisplayData(_dataController.GetDisplayData());
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine($"Fehler beim SQL-Laden: {exception.Message}");
+                _view.ShowMessage($"Fehler beim SQL-Laden: {exception.Message}");
+            }
         }
 
         private void OnLoadXmlRequested(object sender, EventArgs e)

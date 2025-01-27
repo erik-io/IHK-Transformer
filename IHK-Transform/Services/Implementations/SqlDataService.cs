@@ -115,7 +115,7 @@ namespace IHK_Transform.Services
                                 reader.GetInt32("azubi_id"),
                                 reader.GetString("vorname"),
                                 reader.GetString("nachname"),
-                                reader.GetDateTime("geburtsdatum"),
+                                reader.GetDateTime("ausbildungsbeginn"),
                                 reader.GetString("ausbildung_id"),
                                 reader.GetInt32("ausbilder_id")
                             ));
