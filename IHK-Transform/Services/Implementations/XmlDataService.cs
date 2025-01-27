@@ -1,38 +1,107 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Diagnostics;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Management.Instrumentation;
 using System.Xml.Linq;
-using IHK_Transform.Models;
 using IHK_Transform.Models.Entities;
+using IHK_Transform.Services.Interfaces;
 
-namespace IHK_Transform.Services
+namespace IHK_Transform.Services.Implementations
 {
-    public class XmlDataService : DataHandler
+    public class XmlDataService : IDataProvider
     {
-        // private List<Azubi> _azubis = new List<Azubi>();
-        // private List<Ausbilder> _ausbilder = new List<Ausbilder>();
-        // private List<Ausbildung> _ausbildungen = new List<Ausbildung>(); 
+        // Datenfelder für die Datenhaltung
+        private readonly List<Azubi> _azubis = new List<Azubi>();
+        private readonly List<Ausbilder> _ausbilder = new List<Ausbilder>();
+        private readonly List<Ausbildung> _ausbildungen = new List<Ausbildung>(); 
         private string _filePath;
+        private string _lastError;
+        private bool _isConnected;
 
-        public void SetFilePath(string filePath)
-        {
-            _filePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
-        }
+        // // Interface-Implementierungen
+        // public bool IsConnected { get; private set; }
+        // public string LastError { get; private set; } = string.Empty;
 
-        public override void LoadData()
+        // --- IDataProvider-Implementierung ---
+        // public void Connect() => IsConnected = true; // XML-Datei benötigt keine Verbindung
+        // public void Disconnect() => IsConnected = false;
+
+        public bool IsConnected => _isConnected;
+        public string LastError => _lastError;
+
+        public void Connect()
         {
             if (string.IsNullOrWhiteSpace(_filePath))
-                throw new InvalidOperationException("Die Datei wurde nicht gefunden oder der Pfad ist leer.");
+            {
+                _lastError = "Kein Dateipfad angegeben.";
+                _isConnected = false;
+                return;
+            }
 
-            LoadAzubiData();
-            LoadAusbilderData();
-            LoadAusbildungData();
+            try
+            {
+                // Prüfen ob die XML-Datei existiert und lesbar ist
+                if (System.IO.File.Exists(_filePath))
+                {
+                    // Testweise die XML-Datei laden um Syntax zu prüfen
+                    XDocument.Load(_filePath);
+                    _isConnected = true;
+                    Debug.WriteLine($"XML-Verbindung hergestellt: {_filePath}");
+                }
+                else
+                {
+                    _lastError = "Die Datei wurde nicht gefunden oder ist nicht lesbar.";
+                    _isConnected = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                _lastError = $"XML-Verbindungsfehler: {ex.Message}";
+                _isConnected = false;
+                throw;
+            }
+        }
+
+        public void Disconnect()
+        {
+            _isConnected = false;
+        }
+
+        // Datenquellensteuerung
+        public void SetFilePath(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+                throw new ArgumentNullException(nameof(filePath));
+
+            _filePath = filePath;
+            Debug.WriteLine($"XML-Dateipfad gesetzt: {filePath}");
+        }
+
+        public void LoadData()
+        {
+            if (!_isConnected)
+            {
+                throw new InvalidOperationException("Keine Verbindung zur XML-Datei hergestellt.");
+            }
+
+            if (string.IsNullOrWhiteSpace(_filePath))
+            {
+                throw new InvalidOperationException("Kein XML-Dateipfad angegeben.");
+            }
+
+            try
+            {
+                LoadAzubiData();
+                LoadAusbilderData();
+                LoadAusbildungData();
+                Debug.WriteLine($"XML-Daten geladen - Azubis: {_azubis.Count}, Ausbilder: {_ausbilder.Count}, Ausbildungen: {_ausbildungen.Count}");
+            }
+            catch (Exception ex)
+            {
+                _lastError = $"Fehler beim Laden der XML-Daten: {ex.Message}";
+                Debug.WriteLine(_lastError);
+                throw;
+            }
         }
 
         private void LoadAzubiData()
@@ -43,10 +112,10 @@ namespace IHK_Transform.Services
                 try
                 {
                     int azubiID = int.Parse(a.Element("azubi_id")?.Value ?? "0");
-                    string vorname = a.Element("vorname")?.Value ?? "NULL";
-                    string nachname = a.Element("nachname")?.Value ?? "NULL";
-                    DateTime ausbildungsbeginn = DateTime.Parse(a.Element("ausbildungsbeginn")?.Value ?? "2000-01-01");
-                    string ausbildungID = a.Element("ausbildung_id")?.Value ?? "0";
+                    string vorname = a.Element("vorname")?.Value ?? string.Empty;
+                    string nachname = a.Element("nachname")?.Value ?? string.Empty;
+                    DateTime ausbildungsbeginn = DateTime.Parse(a.Element("ausbildungsbeginn")?.Value ?? DateTime.Now.ToString());
+                    string ausbildungID = a.Element("ausbildung_id")?.Value ?? string.Empty;
                     int ausbilderID = int.Parse(a.Element("ausbilder_id")?.Value ?? "0");
 
                     _azubis.Add(new Azubi(azubiID, vorname, nachname, ausbildungsbeginn, ausbildungID, ausbilderID));
@@ -66,8 +135,8 @@ namespace IHK_Transform.Services
                 try
                 {
                     int ausbilderID = int.Parse(a.Element("ausbilder_id")?.Value ?? "0");
-                    string vorname = a.Element("vorname")?.Value ?? "NULL";
-                    string nachname = a.Element("nachname")?.Value ?? "NULL";
+                    string vorname = a.Element("vorname")?.Value ?? string.Empty;
+                    string nachname = a.Element("nachname")?.Value ?? string.Empty;
 
                     _ausbilder.Add(new Ausbilder(ausbilderID, vorname, nachname));
                 }
@@ -85,8 +154,8 @@ namespace IHK_Transform.Services
             {
                 try
                 {
-                    string ausbildungID = a.Element("ausbildung_id")?.Value ?? "0";
-                    string bezeichnung = a.Element("bezeichnung")?.Value ?? "NULL";
+                    string ausbildungID = a.Element("ausbildung_id")?.Value ?? string.Empty;
+                    string bezeichnung = a.Element("bezeichnung")?.Value ?? string.Empty;
 
                     _ausbildungen.Add(new Ausbildung(ausbildungID, bezeichnung));
                 }
@@ -97,8 +166,15 @@ namespace IHK_Transform.Services
             }
         }
 
-        // public List<Azubi> GetAzubiData() => _azubis;
-        // public List<Ausbilder> GetAusbilderData() => _ausbilder;
-        // public List<Ausbildung> GetAusbildungData() => _ausbildungen;
+        // Datenabrufmethoden
+        public List<Azubi> GetAzubiData() => _azubis;
+        public List<Ausbilder> GetAusbilderData() => _ausbilder;
+        public List<Ausbildung> GetAusbildungData() => _ausbildungen;
+
+        // Speichern der Daten (nicht implementiert)
+        public void SaveData()
+        {
+            throw new NotImplementedException("XML-Speicherung nicht implementiert.");
+        }
     }
 }

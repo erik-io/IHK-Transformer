@@ -7,17 +7,17 @@ using System.Text;
 using System.Threading.Tasks;
 using IHK_Transform;
 using System.Diagnostics;
+using IHK_Transform.Infrastructure.Configuration;
 using IHK_Transform.Models.Entities;
 using IHK_Transform.Services.Interfaces;
-using IHK_Transform.Utilities;
 
 namespace IHK_Transform.Services
 {
     internal class SqlDataService : IDataProvider
     {
-        private List<Azubi> _azubis = new List<Azubi>();
-        private List<Ausbilder> _ausbilder = new List<Ausbilder>();
-        private List<Ausbildung> _ausbildungen = new List<Ausbildung>();
+        private readonly List<Azubi> _azubis = new List<Azubi>();
+        private readonly List<Ausbilder> _ausbilder = new List<Ausbilder>();
+        private readonly List<Ausbildung> _ausbildungen = new List<Ausbildung>();
         private readonly string _connectionString;
         private string _lastError = string.Empty;
 
@@ -58,15 +58,11 @@ namespace IHK_Transform.Services
 
         public void Disconnect() => IsConnected = false;
 
-        public void SetSource(string source)
-        {
-            throw new NotImplementedException("Set Source wird für SQL-Datenquellen nicht unterstützt");
-        }
-
         public void SetFilePath(string filePath)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("SetFilePath wird für SQL-Datenquellen nicht unterstützt");
         }
+
 
         public void LoadData()
         {

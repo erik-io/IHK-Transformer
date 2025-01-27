@@ -108,6 +108,7 @@
     <Compile Include="Models\Entities\Azubi.cs" />
     <Compile Include="Controllers\DataController.cs" />
     <Compile Include="Models\EventArgs\DataLoadedEventArgs.cs" />
+    <Compile Include="Services\DataProviderFactory.cs" />
     <Compile Include="Services\Implementations\DataService.cs" />
     <Compile Include="Services\Base\DataHandler.cs" />
     <Compile Include="Services\Interfaces\IDataHandler.cs" />
@@ -125,7 +126,6 @@
     <Compile Include="Services\Implementations\CsvDataService.cs" />
     <Compile Include="Services\Implementations\SqlDataService.cs" />
     <Compile Include="Services\Implementations\XmlDataService.cs" />
-    <Compile Include="Infrastructure\FileSystem\FileHandler.cs" />
     <Compile Include="Views\Interfaces\IMainView.cs" />
     <EmbeddedResource Include="Views\Forms\MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>

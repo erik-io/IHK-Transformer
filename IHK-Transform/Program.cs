@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using IHK_Transform.Controllers;
 using IHK_Transform.Controllers.Interfaces;
+using IHK_Transform.Infrastructure.Configuration;
 using IHK_Transform.Services;
 using IHK_Transform.Services.Implementations;
 using IHK_Transform.Services.Interfaces;
-using IHK_Transform.Utilities;
 using IHK_Transform.Views.Forms;
 
 namespace IHK_Transform
@@ -24,23 +25,52 @@ namespace IHK_Transform
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            // Dependency Injection Setup
-            var iniReader = new IniReader("Config/config.ini");
+            try
+            {
+                // Konfiguration aus INI-Datei laden
+                var iniReader = new IniReader("Config/config.ini");
+                string dataSource = iniReader.GetValue("General","default_source");
 
-            // Datenprovider erstellen (implementiert IDataProvider)
-            IDataProvider dataProvider = new CsvDataService(); // Explizit CSV-Provider verwenden
+                // Debug-Ausgabe zur Überprüfung der gelesenen Konfiguration
+                Debug.WriteLine($"Gelesene Datenquelle aus INI: {dataSource}");
 
-            // Controller initialisieren
-            IDataController dataController = new DataController(dataProvider);
+                // Factory erstellt den passenden Provider
+                IDataProvider dataProvider;
+                try
+                {
+                    dataProvider = DataProviderFactory.CreateProvider(dataSource, iniReader);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Fehler beim Erstellen des DataProviders: {ex.Message}\n" +
+                                    "Die Anwendung wird mit Standard-CSV-Provider gestartet.",
+                        "Konfigurationsfehler",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
 
-            // MainForm mit Dependency Injection erstellen
-            var mainForm = new MainForm(dataController);
+                    // Fallback auf CSV bei Fehler
+                    dataProvider = DataProviderFactory.CreateProvider("csv");
+                }
 
-            // MainController verbindet View und Controller
-            var mainController = new MainController(mainForm, dataController, dataProvider);
+                // Controller initialisieren
+                IDataController dataController = new DataController(dataProvider);
 
-            // Anwendung starten
-            Application.Run(mainForm);
+                // MainForm mit Dependency Injection erstellen
+                var mainForm = new MainForm(dataController);
+
+                // MainController verbindet View und Controller
+                var mainController = new MainController(mainForm, dataController, dataProvider);
+
+                // Anwendung starten
+                Application.Run(mainForm);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Kritischer Fehler beim Starten der Anwendung:\n{ex.Message}",
+                    "Fehler",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
     }
 }

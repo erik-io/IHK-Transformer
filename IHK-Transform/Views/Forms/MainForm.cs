@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using IHK_Transform.Controllers.Interfaces;
-using IHK_Transform.Utilities;
+using IHK_Transform.Infrastructure.Configuration;
 using IHK_Transform.Views.Interfaces;
 
 namespace IHK_Transform.Views.Forms
@@ -59,57 +59,17 @@ namespace IHK_Transform.Views.Forms
 
         private void btnLoadSQL_Click(object sender, EventArgs e)
         {
-            LoadSqlDataRequested.Invoke(this, EventArgs.Empty);
-
-            /*try
-            {
-                var iniReader = new IniReader("Config/config.ini");
-                var sqlDataService = new SqlDataService(iniReader);
-
-                sqlDataService.LoadData();
-
-                _dataController.LoadDataFromSQL(sqlDataService);
-
-                var data = _dataController.DisplayAzubis();
-                dgvAzubi.DataSource = data;
-
-            }
-            catch (Exception exception)
-            {
-                Console.WriteLine(exception);
-                throw;
-            }*/
+            LoadSqlDataRequested?.Invoke(this, EventArgs.Empty);
         }
 
         private void btnLoadCSV_Click(object sender, EventArgs e)
         {
-            LoadCsvDataRequested.Invoke(this, EventArgs.Empty);
-            /*try
-            {
-                var iniReader = new IniReader("Config/config.ini");
-                string delimiterStr = iniReader.GetValue("CSV", "delimiter");
-                char delimiter = string.IsNullOrWhiteSpace(delimiterStr) ? ';' : delimiterStr[0];
-
-                _csvDataService.SetDelimiter(delimiter);
-                _fileHandler.LoadData("csv");
-                _dataController.LoadDataFromCSV(_csvDataService);
-                var data = _dataController.DisplayAzubis();
-                dgvAzubi.DataSource = data;
-            }
-            catch (Exception exception)
-            {
-                Console.WriteLine(exception);
-                throw;
-            }*/
+            LoadCsvDataRequested?.Invoke(this, EventArgs.Empty);
         }
 
         private void btnLoadXML_Click(object sender, EventArgs e)
         {
-            LoadXmlDataRequested.Invoke(this, EventArgs.Empty);
-            // _fileHandler.LoadData("xml");
-            // _dataController.LoadDataFromXml(_xmlDataService);
-            // var data = _dataController.DisplayAzubis();
-            // dgvAzubi.DataSource = data;
+            LoadXmlDataRequested?.Invoke(this, EventArgs.Empty);
         }
 
         // UI-Update Methoden

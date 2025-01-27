@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using IHK_Transform.Models;
+﻿using System.Collections.Generic;
 using IHK_Transform.Models.Entities;
 
-namespace IHK_Transform
+namespace IHK_Transform.Services.Implementations
 {
     internal class DataService
     {

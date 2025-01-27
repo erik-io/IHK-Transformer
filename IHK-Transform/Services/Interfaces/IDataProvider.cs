@@ -16,7 +16,7 @@ namespace IHK_Transform.Services.Interfaces
         void Disconnect();
 
         // Datenquellensteuerung
-        void SetSource(string source);
+        void SetFilePath(string filePath);
         new void LoadData();
 
         // Datenabfragen

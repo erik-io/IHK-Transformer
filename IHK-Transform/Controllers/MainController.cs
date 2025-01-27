@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using IHK_Transform.Controllers.Interfaces;
+using IHK_Transform.Services;
 using IHK_Transform.Services.Implementations;
 using IHK_Transform.Services.Interfaces;
 using IHK_Transform.Views.Interfaces;
@@ -17,46 +18,95 @@ namespace IHK_Transform.Controllers
     internal class MainController
     {
         private readonly IMainView _view;
-        private readonly IDataController _dataController;
+        private IDataController _dataController;
         private readonly IDataProvider _dataProvider;
 
         public MainController(IMainView view, IDataController dataController, IDataProvider dataProvider)
         {
-            _view = view;
-            _dataController = dataController;
-            _dataProvider = dataProvider;
+            _view = view ?? throw new ArgumentNullException(nameof(view));
+            _dataController = dataController ?? throw new ArgumentNullException(nameof(dataController));
+            _dataProvider = dataProvider ?? throw new ArgumentNullException(nameof(dataProvider));
 
             _view.LoadCsvDataRequested += OnLoadCsvRequested;
+            _view.LoadXmlDataRequested += OnLoadXmlRequested;
+        }
+
+        private void OnLoadXmlRequested(object sender, EventArgs e)
+        {
+        try
+        {
+            string filePath = ShowFileDialog("XML-Dateien (*.xml)|*.xml", "XML-Datei auswählen");
+            if (string.IsNullOrEmpty(filePath)) return;
+
+            // Provider erstellen und konfigurieren
+            var xmlProvider = DataProviderFactory.CreateProvider("xml");
+            xmlProvider.SetFilePath(filePath);
+            xmlProvider.Connect();
+
+            // Neuen DataController mit XML-Provider erstellen
+            _dataController = new DataController(xmlProvider);
+            _dataController.InitializeDataSources();
+            _dataController.LoadData("xml");
+            
+            Debug.WriteLine($"XML-Datei wird geladen: {filePath}");
+
+            // DataController aktualisieren
+            _view.DisplayData(_dataController.GetDisplayData());
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Fehler beim XML-Laden: {ex.Message}");
+            _view.ShowMessage($"Fehler beim XML-Laden: {ex.Message}");
+        }
         }
 
         private void OnLoadCsvRequested(object sender, EventArgs e)
         {
             try
             {
-                using (OpenFileDialog openFileDialog = new OpenFileDialog())
+                string filePath = ShowFileDialog("CSV-Dateien (*.csv)|*.csv", "CSV-Datei auswählen");
+                if (string.IsNullOrEmpty(filePath)) return;
+
+                // CSV-Provider aus dem bestehenden Provider casten
+                var csvProvider = DataProviderFactory.CreateProvider("csv");
+                if (!(csvProvider is CsvDataService))
                 {
-                    openFileDialog.Filter = "CSV-Dateien (*.csv)|*.csv";
-                    openFileDialog.Title = "CSV-Datei auswählen";
-
-                    if (openFileDialog.ShowDialog() == DialogResult.OK)
-                    {
-                        string filePath = openFileDialog.FileName;
-
-                        var csvProvider = _dataProvider as CsvDataService;
-                        // Pfad setzen und Daten laden
-                        csvProvider.SetFilePath(filePath);
-                        csvProvider.LoadData();
-
-                        _dataController.LoadData("csv");
-
-                        Debug.WriteLine($"Daten geladen: {csvProvider.GetAzubiData().Count} Azubis");
-                        _view.DisplayData(_dataController.GetDisplayData());
-                    }
+                    _view.ShowMessage("Fehler beim Erstellen des CSV-Providers.");
+                    return;
                 }
+
+                Debug.WriteLine($"CSV-Datei wird geladen: {filePath}");
+
+                // Provider konfigurieren und verbinden
+                csvProvider.SetFilePath(filePath);
+                csvProvider.Connect();
+
+                // Neuen DataController mit CSV-Provider erstellen
+                _dataController = new DataController(csvProvider);
+                _dataController.InitializeDataSources();
+                _dataController.LoadData("csv");
+
+                _view.DisplayData(_dataController.GetDisplayData());
             }
             catch (Exception exception)
             {
+                Debug.WriteLine($"Fehler beim CSV-Laden: {exception.Message}");
                 _view.ShowMessage($"Fehler beim CSV-Laden: {exception.Message}");
+            }
+        }
+
+        private string ShowFileDialog(string filter, string title)
+        {
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Filter = filter;
+                openFileDialog.Title = title;
+                openFileDialog.InitialDirectory = Path.Combine(
+                    AppDomain.CurrentDomain.BaseDirectory, "Data"); // Startpfad für Dateiauswahl TODO: Config
+                
+                return openFileDialog.ShowDialog() == DialogResult.OK
+                    ? openFileDialog.FileName
+                    : null;
             }
         }
     }

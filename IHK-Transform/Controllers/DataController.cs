@@ -18,6 +18,7 @@ namespace IHK_Transform.Controllers
         private List<Azubi> _azubis = new List<Azubi>();
         private List<Ausbilder> _ausbilder = new List<Ausbilder>();
         private List<Ausbildung> _ausbildungen = new List<Ausbildung>();
+        private string _activeSourceType;
 
         // Ereignisse
         public event EventHandler DataLoaded;
@@ -42,18 +43,25 @@ namespace IHK_Transform.Controllers
             }
         }
 
-        // Methode für CSV-Laden (nutzt den gesetzten Source-Typ)
         public void LoadData(string sourceType)
         {
             try
             {
-                // _dataProvider.SetSource(sourceType);
+                // Speichere den aktiven Quelltyp
+                _activeSourceType = sourceType;
+
+                // Lösche alte Daten
+                _azubis.Clear();
+                _ausbilder.Clear();
+                _ausbildungen.Clear();
+
+                // Lade Daten vom Provider
                 _dataProvider.LoadData();
 
-                // Daten aus dem Provider holen
-                _azubis = _dataProvider.GetAzubiData();
-                _ausbilder = _dataProvider.GetAusbilderData();
-                _ausbildungen = _dataProvider.GetAusbildungData();
+                // Daten aus dem Provider in die lokalen Listen kopieren
+                _azubis = new List<Azubi>(_dataProvider.GetAzubiData());
+                _ausbilder = new List<Ausbilder>(_dataProvider.GetAusbilderData());
+                _ausbildungen = new List<Ausbildung>(_dataProvider.GetAusbildungData());
 
                 DataLoaded?.Invoke(this, EventArgs.Empty);
             }
