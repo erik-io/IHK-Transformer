@@ -8,25 +8,59 @@ using System.Threading.Tasks;
 using IHK_Transform;
 using System.Diagnostics;
 using IHK_Transform.Models.Entities;
+using IHK_Transform.Services.Interfaces;
 using IHK_Transform.Utilities;
 
 namespace IHK_Transform.Services
 {
-    internal class SqlDataService : DataHandler
+    internal class SqlDataService : IDataProvider
     {
-        // private List<Azubi> _azubis = new List<Azubi>();
-        // private List<Ausbilder> _ausbilder = new List<Ausbilder>();
-        // private List<Ausbildung> _ausbildungen = new List<Ausbildung>();
+        private List<Azubi> _azubis = new List<Azubi>();
+        private List<Ausbilder> _ausbilder = new List<Ausbilder>();
+        private List<Ausbildung> _ausbildungen = new List<Ausbildung>();
         private readonly string _connectionString;
+        private string _lastError = string.Empty;
+
+        
+        // Interface-Implementierungen
+        public bool IsConnected { get; private set; }
+        public string LastError => _lastError;
 
         public SqlDataService(IniReader iniReader)
         {
-            string server = iniReader.GetValue("SQL", "server");
-            string port = iniReader.GetValue("SQL", "port");
-            string database = iniReader.GetValue("SQL", "database");
-            string user = iniReader.GetValue("SQL", "user");
-            string password = iniReader.GetValue("SQL", "password");
+            // Verbindungsdaten aus der INI-Datei lesen
+            string server = iniReader.GetValue("SQL", "server") ?? "localhost";
+            string port = iniReader.GetValue("SQL", "port") ?? "3306";
+            string database = iniReader.GetValue("SQL", "database") ?? "ihk_transformer";
+            string user = iniReader.GetValue("SQL", "user") ?? "root";
+            string password = iniReader.GetValue("SQL", "password") ?? "";
+
             _connectionString = $"Server={server},Port={port};Database={database};User Id={user};Password={password};";
+        }
+
+        // --- IDataProvider-Implementierung ---
+        public void Connect()
+        {
+            try
+            {
+                using (var conn = GetConnection())
+                {
+                    conn.Open();
+                    IsConnected = true;
+                }
+            }
+            catch (Exception e)
+            {
+                _lastError = e.Message;
+                IsConnected = false;
+            }
+        }
+
+        public void Disconnect() => IsConnected = false;
+
+        public void SetSource(string source)
+        {
+            throw new NotImplementedException("Set Source wird für SQL-Datenquellen nicht unterstützt");
         }
 
         public void SetFilePath(string filePath)
@@ -34,20 +68,43 @@ namespace IHK_Transform.Services
             throw new NotImplementedException();
         }
 
-        public override void LoadData()
+        public void LoadData()
         {
-            LoadAzubiData();
-            LoadAusbilderData();
-            LoadAusbildungData();
+            if(!IsConnected)
+            {
+                throw new InvalidOperationException("Datenbankverbindung wurde noch nicht hergestellt.");
+            }
+
+            try
+            {
+                LoadAzubiData();
+                LoadAusbilderData();
+                LoadAusbildungData();
+            }
+            catch (Exception e)
+            {
+                _lastError = $"Datenladefehler : {e.Message}";
+                Debug.WriteLine(_lastError);
+            }
         }
 
-        private MySqlConnection GetConnection()
+        // --- DataHandler-Implementierung (geerbt) ---
+        public void SaveData()
         {
-            return new MySqlConnection(_connectionString);
+            // Optional: Logik zum Speichern von Änderungen in der Datenbank
+            throw new NotImplementedException("SaveData ist für SQL noch nicht implementiert");
         }
+
+        // --- Datenabfragen ---
+        public List<Azubi> GetAzubiData() => _azubis;
+        public List<Ausbilder> GetAusbilderData() => _ausbilder;
+        public List<Ausbildung> GetAusbildungData() => _ausbildungen;
+
+        private MySqlConnection GetConnection() => new MySqlConnection(_connectionString);
 
         private void LoadAzubiData()
         {
+            _azubis.Clear();
             using (MySqlConnection conn = GetConnection())
             {
                 conn.Open();
@@ -58,19 +115,19 @@ namespace IHK_Transform.Services
                     {
                         try
                         {
-                            int azubiID = reader.GetInt32("azubi_id");
-                            string vorname = reader.GetString("vorname");
-                            string nachname = reader.GetString("nachname");
-                            DateTime ausbildungsbeginn = reader.GetDateTime("ausbildungsbeginn");
-                            string ausbildungID = reader.GetString("ausbildung_id");
-                            int ausbilderID = reader.GetInt32("ausbilder_id");
-
-                            _azubis.Add(new Azubi(azubiID, vorname, nachname, ausbildungsbeginn, ausbildungID,
-                                ausbilderID));
+                            _azubis.Add(new Azubi(
+                                reader.GetInt32("azubi_id"),
+                                reader.GetString("vorname"),
+                                reader.GetString("nachname"),
+                                reader.GetDateTime("geburtsdatum"),
+                                reader.GetString("ausbildung_id"),
+                                reader.GetInt32("ausbilder_id")
+                            ));
                         }
                         catch (Exception ex)
                         {
-                            Debug.WriteLine($"Fehler beim Verarbeiten eines Azubi-Eintrags: {ex.Message}");
+                            _lastError = $"Fehler beim Verarbeiten eines Azubi-Eintrags: {ex.Message}";
+                            Debug.WriteLine(_lastError);
                         }
                     }
                 }
@@ -79,6 +136,7 @@ namespace IHK_Transform.Services
 
         private void LoadAusbilderData()
         {
+            _ausbilder.Clear();
             using (MySqlConnection conn = GetConnection())
             {
                 conn.Open();
@@ -89,15 +147,16 @@ namespace IHK_Transform.Services
                     {
                         try
                         {
-                            int AusbilderID = reader.GetInt32("ausbilder_id");
-                            string vorname = reader.GetString("vorname");
-                            string nachname = reader.GetString("nachname");
-
-                            _ausbilder.Add(new Ausbilder(AusbilderID, vorname, nachname));
+                            _ausbilder.Add(new Ausbilder(
+                                reader.GetInt32("ausbilder_id"),
+                                reader.GetString("vorname"),
+                                reader.GetString("nachname")
+                            ));
                         }
                         catch (Exception ex)
                         {
-                            Debug.WriteLine($"Fehler beim Verarbeiten eines Ausbilder-Eintrags: {ex.Message}");
+                            _lastError = $"Fehler beim Verarbeiten eines Ausbilder-Eintrags: {ex.Message}";
+                            Debug.WriteLine(_lastError);
                         }
                     }
                 }
@@ -106,6 +165,7 @@ namespace IHK_Transform.Services
 
         private void LoadAusbildungData()
         {
+            _ausbildungen.Clear();
             using (MySqlConnection conn = GetConnection())
             {
                 conn.Open();
@@ -116,21 +176,19 @@ namespace IHK_Transform.Services
                     {
                         try
                         {
-                            string ausbildungID = reader.GetString("ausbildung_id");
-                            string bezeichnung = reader.GetString("bezeichnung");
-                            _ausbildungen.Add(new Ausbildung(ausbildungID, bezeichnung));
+                            _ausbildungen.Add(new Ausbildung(
+                                reader.GetString("ausbildung_id"),
+                                reader.GetString("bezeichnung")
+                            ));
                         }
                         catch (Exception ex)
                         {
-                            Debug.WriteLine($"Fehler beim Verarbeiten eines Ausbildungs-Eintrags: {ex.Message}");
+                            _lastError = $"Fehler beim Verarbeiten eines Ausbildung-Eintrags: {ex.Message}";
+                            Debug.WriteLine(_lastError);
                         }
                     }
                 }
             }
         }
-
-        // public List<Azubi> GetAzubiData() => _azubis;
-        // public List<Ausbilder> GetAusbilderData() => _ausbilder;
-        // public List<Ausbildung> GetAusbildungData() => _ausbildungen;
     }
 }

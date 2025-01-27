@@ -102,10 +102,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controllers\Interfaces\IDataController.cs" />
+    <Compile Include="Controllers\MainController.cs" />
     <Compile Include="Models\Entities\Ausbilder.cs" />
     <Compile Include="Models\Entities\Ausbildung.cs" />
     <Compile Include="Models\Entities\Azubi.cs" />
     <Compile Include="Controllers\DataController.cs" />
+    <Compile Include="Models\EventArgs\DataLoadedEventArgs.cs" />
     <Compile Include="Services\Implementations\DataService.cs" />
     <Compile Include="Services\Base\DataHandler.cs" />
     <Compile Include="Services\Interfaces\IDataHandler.cs" />
@@ -167,5 +169,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

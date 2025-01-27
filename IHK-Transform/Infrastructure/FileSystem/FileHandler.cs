@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿/*
+using System;
 using System.Windows.Forms;
 using IHK_Transform.Services;
+using IHK_Transform.Services.Implementations;
 
-namespace IHK_Transform.Utilities
+namespace IHK_Transform.Infrastructure.FileSystem
 {
-    internal class FileHandler
+    public class FileHandler
     {
         private readonly XmlDataService _xmlDataService;
         private readonly CsvDataService _csvDataService;
@@ -21,15 +17,17 @@ namespace IHK_Transform.Utilities
             _csvDataService = csvDataService ?? throw new ArgumentNullException(nameof(csvDataService));
         }
 
-        public void LoadData(string fileType)
+        public void LoadData(string fileType, string filePath)
         {
             switch (fileType.ToLower())
             {
                 case "xml":
-                    LoadXML();
+                    _xmlDataService.SetFilePath(filePath);
+                    _xmlDataService.LoadData();
                     break;
                 case "csv":
-                    LoadCSV();
+                    _csvDataService.SetFilePath(filePath);
+                    _csvDataService.LoadData();
                     break;
                 default:
                     throw new ArgumentException("Nicht unterstütztes Dateiformat.");
@@ -83,3 +81,4 @@ namespace IHK_Transform.Utilities
         }
     }
 }
+*/

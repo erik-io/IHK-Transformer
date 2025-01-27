@@ -1,4 +1,4 @@
-﻿namespace IHK_Transform
+﻿namespace IHK_Transform.Views.Forms
 {
     partial class MainForm
     {
@@ -51,7 +51,7 @@
             this.btnLoadSQL.TabIndex = 1;
             this.btnLoadSQL.Text = "SQL";
             this.btnLoadSQL.UseVisualStyleBackColor = true;
-            this.btnLoadSQL.Click += new System.EventHandler(this.btnLoadSQL_Click);
+            // this.btnLoadSQL.Click += new System.EventHandler(this.btnLoadSQL_Click);
             // 
             // btnLoadCSV
             // 
@@ -61,7 +61,7 @@
             this.btnLoadCSV.TabIndex = 2;
             this.btnLoadCSV.Text = "CSV";
             this.btnLoadCSV.UseVisualStyleBackColor = true;
-            this.btnLoadCSV.Click += new System.EventHandler(this.btnLoadCSV_Click);
+            /// this.btnLoadCSV.Click += new System.EventHandler(this.btnLoadCSV_Click);
             // 
             // btnLoadXML
             // 
@@ -71,9 +71,9 @@
             this.btnLoadXML.TabIndex = 3;
             this.btnLoadXML.Text = "XML";
             this.btnLoadXML.UseVisualStyleBackColor = true;
-            this.btnLoadXML.Click += new System.EventHandler(this.btnLoadXML_Click);
+            // this.btnLoadXML.Click += new System.EventHandler(this.btnLoadXML_Click);
             // 
-            // Form1
+            // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -82,9 +82,9 @@
             this.Controls.Add(this.btnLoadCSV);
             this.Controls.Add(this.btnLoadSQL);
             this.Controls.Add(this.dgvAzubi);
-            this.Name = "Form1";
-            this.Text = "Form1";
-            this.Load += new System.EventHandler(this.Form1_Load);
+            this.Name = "MainForm";
+            this.Text = "MainForm";
+            this.Load += new System.EventHandler(this.MainForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dgvAzubi)).EndInit();
             this.ResumeLayout(false);
 

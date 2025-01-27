@@ -1,37 +1,42 @@
-﻿using MySql.Data.MySqlClient;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using IHK_Transform.Controllers;
-using IHK_Transform.Services;
+using IHK_Transform.Controllers.Interfaces;
 using IHK_Transform.Utilities;
+using IHK_Transform.Views.Interfaces;
 
-namespace IHK_Transform
+namespace IHK_Transform.Views.Forms
 {
-    public partial class MainForm : Form
+    public partial class MainForm : Form, IMainView
     {
-        private readonly DataController _dataController;
-        private XmlDataService _xmlDataService;
-        private CsvDataService _csvDataService;
-        private readonly FileHandler _fileHandler;
+        // Implementierung von IMainView
+        public DataGridView AzubiGrid => dgvAzubi;
+        public event EventHandler LoadSqlDataRequested;
+        public event EventHandler LoadCsvDataRequested;
+        public event EventHandler LoadXmlDataRequested;
+        
+        private readonly IDataController _dataController;
 
-        public MainForm()
+        // private XmlDataService _xmlDataService;
+        // private CsvDataService _csvDataService;
+        // private readonly FileHandler _fileHandler;
+
+        public MainForm(IDataController dataController)
         {
-            _xmlDataService = new XmlDataService();
-            _csvDataService = new CsvDataService();
-            _fileHandler = new FileHandler(_xmlDataService, _csvDataService);
-
-            var dataService = new DataService();
-            _dataController = new DataController(dataService);
+            _dataController = dataController;
             InitializeComponent();
-            InitializeHandlers();
+
+            WireEvents();
+        }
+
+        private void WireEvents()
+        {
+           btnLoadSQL.Click += (s, e) => LoadSqlDataRequested.Invoke(this, EventArgs.Empty);
+           btnLoadCSV.Click += (s, e) => LoadCsvDataRequested.Invoke(this, EventArgs.Empty);
+           btnLoadXML.Click += (s, e) => LoadXmlDataRequested.Invoke(this, EventArgs.Empty);
+
+           _dataController.DataLoaded += (s, e) => ShowMessage("Daten erfolgreich geladen!", false);
+           _dataController.ErrorOccurred += (s, msg) => ShowMessage(msg);
         }
 
         public void InitializeHandlers()
@@ -47,14 +52,16 @@ namespace IHK_Transform
             }
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void MainForm_Load(object sender, EventArgs e)
         {
 
         }
 
         private void btnLoadSQL_Click(object sender, EventArgs e)
         {
-            try
+            LoadSqlDataRequested.Invoke(this, EventArgs.Empty);
+
+            /*try
             {
                 var iniReader = new IniReader("Config/config.ini");
                 var sqlDataService = new SqlDataService(iniReader);
@@ -71,12 +78,13 @@ namespace IHK_Transform
             {
                 Console.WriteLine(exception);
                 throw;
-            }
+            }*/
         }
 
         private void btnLoadCSV_Click(object sender, EventArgs e)
         {
-            try
+            LoadCsvDataRequested.Invoke(this, EventArgs.Empty);
+            /*try
             {
                 var iniReader = new IniReader("Config/config.ini");
                 string delimiterStr = iniReader.GetValue("CSV", "delimiter");
@@ -92,15 +100,38 @@ namespace IHK_Transform
             {
                 Console.WriteLine(exception);
                 throw;
-            }
+            }*/
         }
 
         private void btnLoadXML_Click(object sender, EventArgs e)
         {
-            _fileHandler.LoadData("xml");
-            _dataController.LoadDataFromXml(_xmlDataService);
-            var data = _dataController.DisplayAzubis();
-            dgvAzubi.DataSource = data;
+            LoadXmlDataRequested.Invoke(this, EventArgs.Empty);
+            // _fileHandler.LoadData("xml");
+            // _dataController.LoadDataFromXml(_xmlDataService);
+            // var data = _dataController.DisplayAzubis();
+            // dgvAzubi.DataSource = data;
+        }
+
+        // UI-Update Methoden
+        public void DisplayData(List<object> data)
+        {
+            dgvAzubi.DataSource = data; // DataGrid aktualisieren
+        }
+
+        public void ShowMessage(string message, bool isError = true)
+        {
+            MessageBox.Show(
+                message,
+                isError ? "Fehler" : "Info",
+                MessageBoxButtons.OK,
+                isError ? MessageBoxIcon.Error : MessageBoxIcon.Information);
+        }
+
+        public void ShowLoadingState(bool isLoading)
+        {
+            btnLoadCSV.Enabled = !isLoading;
+            btnLoadSQL.Enabled = !isLoading;
+            btnLoadXML.Enabled = !isLoading;
         }
     }
 }

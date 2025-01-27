@@ -1,0 +1,2017 @@
+# File: .\IHK-Transform\Program.cs
+
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using IHK_Transform.Controllers;
+using IHK_Transform.Controllers.Interfaces;
+using IHK_Transform.Services;
+using IHK_Transform.Services.Implementations;
+using IHK_Transform.Services.Interfaces;
+using IHK_Transform.Utilities;
+using IHK_Transform.Views.Forms;
+
+namespace IHK_Transform
+{
+    internal static class Program
+    {
+        /// <summary>
+        /// Der Haupteinstiegspunkt für die Anwendung.
+        /// </summary>
+        [STAThread]
+        static void Main()
+        {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+
+            // Dependency Injection Setup
+            var iniReader = new IniReader("Config/config.ini");
+
+            // Datenprovider erstellen (implementiert IDataProvider)
+            IDataProvider dataProvider = new CsvDataService(); // Oder SqlDataService(iniReader)/XmlDataService()
+
+            // Controller initialisieren
+            IDataController dataController = new DataController(dataProvider);
+
+            // MainForm mit Dependency Injection erstellen
+            var mainForm = new MainForm(dataController);
+
+            // MainController verbindet View und Controller
+            var mainController = new MainController(mainForm, dataController, dataProvider);
+
+            // Anwendung starten
+            Application.Run(mainForm);
+        }
+    }
+}
+
+
+# File: .\IHK-Transform\Controllers\DataController.cs
+
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using IHK_Transform.Controllers.Interfaces;
+using IHK_Transform.Models;
+using IHK_Transform.Models.Entities;
+using IHK_Transform.Services;
+using IHK_Transform.Services.Implementations;
+using IHK_Transform.Services.Interfaces;
+using IHK_Transform.Views.Interfaces;
+
+namespace IHK_Transform.Controllers
+{
+    internal class DataController : IDataController
+    {
+        private readonly IDataProvider _dataProvider;
+        private List<Azubi> _azubis = new List<Azubi>();
+        private List<Ausbilder> _ausbilder = new List<Ausbilder>();
+        private List<Ausbildung> _ausbildungen = new List<Ausbildung>();
+
+        // Ereignisse
+        public event EventHandler DataLoaded;
+        public event EventHandler<string> ErrorOccurred;
+
+        // Konstruktor mit Dependency Injection
+        public DataController(IDataProvider dataProvider)
+        {
+            _dataProvider = dataProvider;
+        }
+
+        // Initialisierung der Datenquelle
+        public void InitializeDataSources()
+        {
+            try
+            {
+                _dataProvider.Connect();
+            }
+            catch (Exception ex)
+            {
+                OnErrorOccurred($"Verbindungsfehler: {ex.Message}");
+            }
+        }
+
+        // Methode für CSV-Laden (nutzt den gesetzten Source-Typ)
+        public void LoadData(string sourceType)
+        {
+            _dataProvider.SetSource(sourceType);
+            _dataProvider.LoadData();
+            DataLoaded?.Invoke(this, EventArgs.Empty); // Event auslösen
+        }
+
+        // Transformiert Daten für die Anzeige
+        public List<object> GetDisplayData()
+        {
+            return DisplayAzubis();
+        }
+
+        public DataController(DataService dataService)
+        {
+            _azubis = new List<Azubi>();
+            _ausbilder = new List<Ausbilder>();
+            _ausbildungen = new List<Ausbildung>();
+        }
+
+        public void LoadDataFromSQL(SqlDataService sqlDataService)
+        {
+            _azubis = sqlDataService.GetAzubiData();
+            _ausbilder = sqlDataService.GetAusbilderData();
+            _ausbildungen = sqlDataService.GetAusbildungData();
+        }
+
+        public void LoadDataFromCSV(CsvDataService csvDataService)
+        {
+            _azubis = csvDataService.GetAzubiData();
+            _ausbilder = csvDataService.GetAusbilderData();
+            _ausbildungen = csvDataService.GetAusbildungData();
+        }
+
+        public void LoadDataFromXml(XmlDataService xmlDataService)
+        {
+            _azubis = xmlDataService.GetAzubiData();
+            _ausbilder = xmlDataService.GetAusbilderData();
+            _ausbildungen = xmlDataService.GetAusbildungData();
+        }
+
+        public List<object> DisplayAzubis()
+        {
+
+            var data = new List<object>();
+
+            foreach (var azubi in _azubis)
+            {
+                var ausbilder = _ausbilder.FirstOrDefault(a => a.AusbilderId == azubi.AusbilderId);
+                var ausbildung = _ausbildungen.FirstOrDefault(b => b.AusbildungId == azubi.AusbildungId);
+
+                // var ausbildungsberuf = ausbildung != null
+                //     ? $"{ausbildung.getAusbildungID()}{azubi.getAusbildungsbeginn().ToString("yy")}"
+                //     : "NULL";
+
+                data.Add(new
+                {
+                    AzubiID = azubi.AzubiId,
+                    Vorname = azubi.Vorname,
+                    Nachname = azubi.Nachname,
+                    Ausbildungsberuf = ausbildung?.Bezeichnung ?? "NULL",
+                    Ausbilder = $"{ausbilder?.Vorname} {ausbilder?.Nachname}" ?? "NULL"
+                });
+            }
+
+            return data;
+        }
+
+        private void OnErrorOccurred(string message)
+        {
+            ErrorOccurred?.Invoke(this, message);
+        }
+    }
+}
+
+# File: .\IHK-Transform\Controllers\MainController.cs
+
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using IHK_Transform.Controllers.Interfaces;
+using IHK_Transform.Services.Interfaces;
+using IHK_Transform.Views.Interfaces;
+
+namespace IHK_Transform.Controllers
+{
+    internal class MainController
+    {
+        private readonly IMainView _view;
+        private readonly IDataController _dataController;
+        private readonly IDataProvider _dataProvider;
+
+        public MainController(IMainView view, IDataController dataController, IDataProvider dataProvider)
+        {
+            _view = view;
+            _dataController = dataController;
+            _dataProvider = dataProvider;
+
+            _view.LoadCsvDataRequested += OnLoadCsvRequested;
+        }
+
+        private void OnLoadCsvRequested(object sender, EventArgs e)
+        {
+            try
+            {
+                _dataController.LoadData("CSV");
+                _view.DisplayData(_dataController.GetDisplayData());
+            }
+            catch (Exception exception)
+            {
+                _view.ShowMessage($"Fehler beim CSV-Laden: {exception.Message}");
+            }
+        }
+    }
+}
+
+
+# File: .\IHK-Transform\Controllers\Interfaces\IDataController.cs
+
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using IHK_Transform.Models.EventArgs;
+using IHK_Transform.Services;
+
+namespace IHK_Transform.Controllers.Interfaces
+{
+    public interface IDataController
+    {
+        // Ereignisbehandlung
+        event EventHandler DataLoaded;
+        event EventHandler<string> ErrorOccurred;
+
+        // Datenoperationen
+        void LoadData(string sourceType);
+        List<object> GetDisplayData();
+
+        // Initialisierung
+        void InitializeDataSources();
+    }
+}
+
+
+# File: .\IHK-Transform\Infrastructure\Configuration\IniReader.cs
+
+﻿using System.Collections.Generic;
+using System.IO;
+
+namespace IHK_Transform.Utilities
+{
+    internal class IniReader
+    {
+        private readonly Dictionary<string, Dictionary<string, string>> sections = new Dictionary<string, Dictionary<string, string>>();
+
+        public IniReader(string filePath)
+        {
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException("Die angegebene .ini-Datei wurde nicht gefunden.", filePath);
+
+            LoadData(filePath);
+        }
+
+        private void LoadData(string filePath)
+        {
+            string currentSection = null;
+
+            foreach (var line in File.ReadAllLines(filePath))
+            {
+                var trimmedLine = line.Trim();
+
+                if (string.IsNullOrEmpty(trimmedLine) || trimmedLine.StartsWith(";"))
+                    continue;
+
+                if (trimmedLine.StartsWith("[") && trimmedLine.EndsWith("]"))
+                {
+                    currentSection = trimmedLine.Trim('[', ']');
+                    if (!sections.ContainsKey(currentSection))
+                        sections[currentSection] = new Dictionary<string, string>();
+                }
+                else if (currentSection != null)
+                {
+                    var keyValue = trimmedLine.Split(new[] { '=' }, 2);
+                    if (keyValue.Length == 2)
+                    {
+                        var key = keyValue[0].Trim();
+                        var value = keyValue[1].Trim();
+                        sections[currentSection][key] = value;
+                    }
+                }
+            }
+        }
+
+        public string GetValue(string section, string key)
+        {
+            return sections.ContainsKey(section) && sections[section].ContainsKey(key)
+                ? sections[section][key]
+                : null;
+        }
+    }
+}
+
+
+# File: .\IHK-Transform\Infrastructure\FileSystem\FileHandler.cs
+
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using IHK_Transform.Services;
+using IHK_Transform.Services.Implementations;
+
+namespace IHK_Transform.Utilities
+{
+    internal class FileHandler
+    {
+        private readonly XmlDataService _xmlDataService;
+        private readonly CsvDataService _csvDataService;
+
+        public FileHandler(XmlDataService xmlDataService, CsvDataService csvDataService)
+        {
+            _xmlDataService = xmlDataService ?? throw new ArgumentNullException(nameof(xmlDataService));
+            _csvDataService = csvDataService ?? throw new ArgumentNullException(nameof(csvDataService));
+        }
+
+        public void LoadData(string fileType)
+        {
+            switch (fileType.ToLower())
+            {
+                case "xml":
+                    LoadXML();
+                    break;
+                case "csv":
+                    LoadCSV();
+                    break;
+                default:
+                    throw new ArgumentException("Nicht unterstütztes Dateiformat.");
+            }
+        }
+
+        private void LoadXML()
+        {
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Filter = "XML-Dateien (*.xml)|*.xml|Alle Dateien (*.*)|*.*";
+                openFileDialog.Title = "XML-Datei auswählen";
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        _xmlDataService.SetFilePath(openFileDialog.FileName);
+                        _xmlDataService.LoadData();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Fehler beim Laden der XML-Datei: {ex.Message}", "Fehler",
+                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+        }
+
+        private void LoadCSV()
+        {
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Filter = "CSV-Dateien (*.csv)|*.csv|Alle Dateien (*.*)|*.*";
+                openFileDialog.Title = "CSV-Datei auswählen";
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        _csvDataService.SetFilePath(openFileDialog.FileName);
+                        _csvDataService.LoadData();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Fehler beim Laden der CSV-Datei: {ex.Message}", "Fehler",
+                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+# File: .\IHK-Transform\Models\Entities\Ausbilder.cs
+
+﻿using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+
+namespace IHK_Transform.Models.Entities
+{
+    /// <summary>
+    /// Repräsentiert einen Ausbilder im System.
+    /// Implementiert INotifyPropertyChanged, für die GUI-Aktualisierung.
+    /// </summary>
+    public class Ausbilder : INotifyPropertyChanged
+    {
+        private int _ausbilderId;
+        private string _vorname;
+        private string _nachname;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>
+        /// Standardkonstruktor für einen neuen Ausbilder
+        /// </summary>
+        public Ausbilder()
+        {
+        }
+
+        /// <summary>
+        /// Konstruktor mit allen erforderlichen Daten
+        /// </summary>
+        public Ausbilder(int ausbilderId, string vorname, string nachname)
+        {
+            AusbilderId = ausbilderId;
+            Vorname = vorname;
+            Nachname = nachname;
+        }
+
+        public int AusbilderId
+        {
+            get => _ausbilderId;
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentException("Ausbilder-ID muss größer als 0 sein.");
+                SetProperty(ref _ausbilderId, value);
+            }
+        }
+
+        public string Vorname
+        {
+            get => _vorname;
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("Vorname darf nicht leer sein.");
+                SetProperty(ref _vorname, value.Trim());
+            }
+        }
+
+        public string Nachname
+        {
+            get => _nachname;
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("Nachname darf nicht leer sein.");
+                SetProperty(ref _nachname, value.Trim());
+            }
+        }
+
+        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+        {
+            if (Equals(field, value)) return false;
+            field = value;
+            OnPropertyChanged(propertyName);
+            return true;
+        }
+
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public override string ToString()
+        {
+            return $"{Vorname} {Nachname}";
+        }
+
+        // Übergangsmethoden
+        public int getAusbilderID() => AusbilderId;
+        public string getVorname() => Vorname;
+        public string getNachname() => Nachname;
+    }
+
+    /*public Ausbilder()
+    {
+    }
+
+    public Ausbilder(int ausbilderID, string vorname, string nachname)
+    {
+        _ausbilder_id = ausbilderID;
+        _vorname = vorname;
+        _nachname = nachname;
+    }
+
+    private int _ausbilder_id { get; set; }
+    private string _vorname { get; set; }
+    private string _nachname { get; set; }
+
+    public int getAusbilderID()
+    {
+        return _ausbilder_id;
+    }
+
+    public void setAusbilderID(int ausbilderID)
+    {
+        _ausbilder_id = ausbilderID;
+    }
+
+    public string getVorname()
+    {
+        return _vorname;
+    }
+
+    public void setVorname(string vorname)
+    {
+        _vorname = vorname;
+    }
+
+    public string getNachname()
+    {
+        return _nachname;
+    }
+
+    public void setNachname(string nachname)
+    {
+        _nachname = nachname;
+    }
+
+    public override string ToString()
+    {
+        return _vorname + " " + _nachname;
+    }
+}*/
+    }
+
+# File: .\IHK-Transform\Models\Entities\Ausbildung.cs
+
+﻿using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+
+namespace IHK_Transform.Models.Entities
+{
+    /// <summary>
+    /// Repräsentiert eine Ausbildung im System.
+    /// Implementiert INotifyPropertyChanged für die GUI-Aktualisierung.
+    /// </summary>
+    public class Ausbildung : INotifyPropertyChanged
+    {
+        private string _ausbildungId;
+        private string _bezeichnung;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>
+        /// Standardkonstruktor für eine neue Ausbildung
+        /// </summary>
+        public Ausbildung()
+        {
+        }
+
+        /// <summary>
+        /// Konstruktor mit allen erforderlichen Daten
+        /// </summary>
+        public Ausbildung(string ausbildungId, string bezeichnung)
+        {
+            AusbildungId = ausbildungId;
+            Bezeichnung = bezeichnung;
+        }
+
+        public string AusbildungId
+        {
+            get => _ausbildungId;
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("Ausbildungs-ID darf nicht leer sein.");
+                if (value.Length > 4)
+                    throw new ArgumentException("Ausbildungs-ID darf maximal 4 Zeichen lang sein.");
+                SetProperty(ref _ausbildungId, value.ToUpper());
+            }
+        }
+
+        public string Bezeichnung
+        {
+            get => _bezeichnung;
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("Bezeichnung darf nicht leer sein.");
+                SetProperty(ref _bezeichnung, value.Trim());
+            }
+        }
+
+        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+        {
+            if (Equals(field, value)) return false;
+            field = value;
+            OnPropertyChanged(propertyName);
+            return true;
+        }
+
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public override string ToString()
+        {
+            return $"{AusbildungId} - {Bezeichnung}";
+        }
+
+        // Übergangsmethode
+        public string getAusbildungID() => AusbildungId;
+    }
+}
+
+/*public Ausbildung()
+{
+}
+
+public Ausbildung(string ausbildungID, string bezeichnung)
+{
+    _ausbildung_id = ausbildungID;
+    _bezeichnung = bezeichnung;
+}
+
+private string _ausbildung_id { get; set; }
+private string _bezeichnung { get; set; }
+
+public string getAusbildungID()
+{
+    return _ausbildung_id;
+}
+
+public void setAusbildungID(string ausbildungID)
+{
+    _ausbildung_id = ausbildungID;
+}
+
+public string getAusbildung()
+{
+    return _bezeichnung;
+}
+
+public void setAusbildung(string bezeichnung)
+{
+    _bezeichnung = bezeichnung;
+}
+
+public override string ToString()
+{
+    return _ausbildung_id;
+}*/
+
+# File: .\IHK-Transform\Models\Entities\Azubi.cs
+
+﻿using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+
+namespace IHK_Transform.Models.Entities
+{
+    /// <summary>
+    /// Repräsentiert einen Auszubildenden im System.
+    /// Implementiert INotifyPropertyChanged, für die GUI-Aktualisierung.
+    /// </summary>
+    public class Azubi : INotifyPropertyChanged
+    {
+        private int _azubiId;
+        private string _vorname;
+        private string _nachname;
+        private DateTime _ausbildungsbeginn;
+        private string _ausbildungId;
+        private int _ausbilderId;
+
+        // Event für Property-Änderungen
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>
+        /// Standardkonstruktor für einen neuen Auszubildenden
+        /// </summary>
+        public Azubi()
+        {
+            // Standardwerte setzen
+            Ausbildungsbeginn = DateTime.Now;
+        }
+
+        /// <summary>
+        /// Konstruktor mit allen erforderlichen Daten
+        /// </summary>
+        public Azubi(int azubiId, string vorname, string nachname,
+            DateTime ausbildungsbeginn, string ausbildungId, int ausbilderId)
+        {
+            AzubiId = azubiId;
+            Vorname = vorname;
+            Nachname = nachname;
+            Ausbildungsbeginn = ausbildungsbeginn;
+            AusbildungId = ausbildungId;
+            AusbilderId = ausbilderId;
+        }
+
+        // Properties mit Validierung und Benachrichtigung
+        public int AzubiId
+        {
+            get => _azubiId;
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentException("Azubi-ID muss größer als 0 sein.");
+                SetProperty(ref _azubiId, value);
+            }
+        }
+
+        public string Vorname
+        {
+            get => _vorname;
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("Vorname darf nicht leer sein.");
+                SetProperty(ref _vorname, value.Trim());
+            }
+        }
+
+        public string Nachname
+        {
+            get => _nachname;
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("Nachname darf nicht leer sein.");
+                SetProperty(ref _nachname, value.Trim());
+            }
+        }
+
+        public DateTime Ausbildungsbeginn
+        {
+            get => _ausbildungsbeginn;
+            set => SetProperty(ref _ausbildungsbeginn, value);
+        }
+
+        public string AusbildungId
+        {
+            get => _ausbildungId;
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("Ausbildungs-ID darf nicht leer sein.");
+                SetProperty(ref _ausbildungId, value);
+            }
+        }
+
+        public int AusbilderId
+        {
+            get => _ausbilderId;
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentException("Ausbilder-ID muss größer als 0 sein.");
+                SetProperty(ref _ausbilderId, value);
+            }
+        }
+
+        /// <summary>
+        /// Hilfsmethode zum Setzen von Properties mit PropertyChanged-Benachrichtigung
+        /// </summary>
+        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+        {
+            if (Equals(field, value)) return false;
+            field = value;
+            OnPropertyChanged(propertyName);
+            return true;
+        }
+
+        /// <summary>
+        /// Löst das PropertyChanged-Event aus
+        /// </summary>
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        /// <summary>
+        /// Gibt eine lesbare String-Repräsentation des Auszubildenden zurück
+        /// </summary>
+        public override string ToString()
+        {
+            return $"{Vorname} {Nachname}";
+        }
+
+        // Übergangsmethoden für Kompatibilität
+        public int getAzubiID() => AzubiId;
+        public string getVorname() => Vorname;
+        public string getNachname() => Nachname;
+        public DateTime getAusbildungsbeginn() => Ausbildungsbeginn;
+        public string getAusbildungID() => AusbildungId;
+        public int getAusbilderID() => AusbilderId;
+    }
+}
+
+
+/*public Azubi()
+{
+}
+
+public Azubi(int azubiID, string vorname, string nachname, string ausbildung, DateTime ausbildungsbeginn, string ausbildungID, int ausbilderID)
+{
+    _azubi_id = azubiID;
+    _vorname = vorname;
+    _nachname = nachname;
+    _ausbildung = ausbildung;
+    _ausbildungsbeginn = ausbildungsbeginn;
+    _ausbildung_id = ausbildungID;
+    _ausbilder_id = ausbilderID;
+}
+
+public Azubi(int azubiID, string vorname, string nachname, DateTime ausbildungsbeginn, string ausbildungID, int ausbilderID)
+{
+    _azubi_id = azubiID;
+    _vorname = vorname;
+    _nachname = nachname;
+    _ausbildungsbeginn = ausbildungsbeginn;
+    _ausbildung_id = ausbildungID;
+    _ausbilder_id = ausbilderID;
+}
+
+private int _azubi_id { get; set; }
+private string _vorname { get; set; }
+private string _nachname { get; set; }
+private string _ausbildung { get; set; }
+private DateTime _ausbildungsbeginn { get; set; }
+private string _ausbildung_id { get; set; }
+private int _ausbilder_id { get; set; }
+
+public int getAzubiID()
+{
+    return _azubi_id;
+}
+
+public void setAzubiID(int azubiID)
+{
+    _azubi_id = azubiID;
+}
+
+public string getVorname()
+{
+    return _vorname;
+}
+
+public void setVorname(string vorname)
+{
+    _vorname = vorname;
+}
+
+public string getNachname()
+{
+    return _nachname;
+}
+
+public void setNachname(string nachname)
+{
+    _nachname = nachname;
+}
+
+public string getAusbildung()
+{
+    return _ausbildung;
+}
+
+public void setAusbildung(string ausbildung)
+{
+    _ausbildung = ausbildung;
+}
+
+public DateTime getAusbildungsbeginn()
+{
+    return _ausbildungsbeginn;
+}
+
+public void setAusbildungsbeginn(DateTime ausbildungsbeginn)
+{
+    _ausbildungsbeginn = ausbildungsbeginn;
+}
+
+public string getAusbildungID()
+{
+    return _ausbildung_id;
+}
+
+public void setAusbildungID(string ausbildungID)
+{
+    _ausbildung_id = ausbildungID;
+}
+
+public int getAusbilderID()
+{
+    return _ausbilder_id;
+}
+
+public void setAusbilderID(int ausbilderID)
+{
+    _ausbilder_id = ausbilderID;
+}
+
+public override string ToString()
+{
+    return $"{_vorname} {_nachname}";
+}
+}*/
+
+# File: .\IHK-Transform\Models\EventArgs\DataLoadedEventArgs.cs
+
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace IHK_Transform.Models.EventArgs
+{
+    internal class DataLoadedEventArgs
+    {
+    }
+}
+
+
+# File: .\IHK-Transform\obj\Debug\.NETFramework,Version=v4.7.2.AssemblyAttributes.cs
+
+// <autogenerated />
+using System;
+using System.Reflection;
+[assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETFramework,Version=v4.7.2", FrameworkDisplayName = ".NET Framework 4.7.2")]
+
+
+# File: .\IHK-Transform\obj\Release\.NETFramework,Version=v4.7.2.AssemblyAttributes.cs
+
+// <autogenerated />
+using System;
+using System.Reflection;
+[assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETFramework,Version=v4.7.2", FrameworkDisplayName = ".NET Framework 4.7.2")]
+
+
+# File: .\IHK-Transform\Properties\AssemblyInfo.cs
+
+﻿using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
+// Allgemeine Informationen über eine Assembly werden über die folgenden
+// Attribute gesteuert. Ändern Sie diese Attributwerte, um die Informationen zu ändern,
+// die einer Assembly zugeordnet sind.
+[assembly: AssemblyTitle("IHK-Transform")]
+[assembly: AssemblyDescription("")]
+[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("IHK-Transform")]
+[assembly: AssemblyCopyright("Copyright ©  2024")]
+[assembly: AssemblyTrademark("")]
+[assembly: AssemblyCulture("")]
+
+// Durch Festlegen von ComVisible auf FALSE werden die Typen in dieser Assembly
+// für COM-Komponenten unsichtbar.  Wenn Sie auf einen Typ in dieser Assembly von
+// COM aus zugreifen müssen, sollten Sie das ComVisible-Attribut für diesen Typ auf "True" festlegen.
+[assembly: ComVisible(false)]
+
+// Die folgende GUID bestimmt die ID der Typbibliothek, wenn dieses Projekt für COM verfügbar gemacht wird
+[assembly: Guid("d29aba1c-bf4c-4555-b6c4-c495030574ac")]
+
+// Versionsinformationen für eine Assembly bestehen aus den folgenden vier Werten:
+//
+//      Hauptversion
+//      Nebenversion
+//      Buildnummer
+//      Revision
+//
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]
+
+
+# File: .\IHK-Transform\Properties\Resources.Designer.cs
+
+﻿//------------------------------------------------------------------------------
+// <auto-generated>
+//     Dieser Code wurde von einem Tool generiert.
+//     Laufzeitversion: 4.0.30319.42000
+//
+//     Änderungen an dieser Datei können fehlerhaftes Verhalten verursachen und gehen verloren, wenn
+//     der Code neu generiert wird.
+// </auto-generated>
+//------------------------------------------------------------------------------
+
+namespace IHK_Transform.Properties
+{
+
+
+    /// <summary>
+    ///   Eine stark typisierte Ressourcenklasse zum Suchen von lokalisierten Zeichenfolgen usw.
+    /// </summary>
+    // Diese Klasse wurde von der StronglyTypedResourceBuilder-Klasse
+    // über ein Tool wie ResGen oder Visual Studio automatisch generiert.
+    // Um einen Member hinzuzufügen oder zu entfernen, bearbeiten Sie die .ResX-Datei und führen dann ResGen
+    // mit der Option /str erneut aus, oder erstellen Sie Ihr VS-Projekt neu.
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+    [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    internal class Resources
+    {
+
+        private static global::System.Resources.ResourceManager resourceMan;
+
+        private static global::System.Globalization.CultureInfo resourceCulture;
+
+        [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
+        internal Resources()
+        {
+        }
+
+        /// <summary>
+        ///   Gibt die zwischengespeicherte ResourceManager-Instanz zurück, die von dieser Klasse verwendet wird.
+        /// </summary>
+        [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
+        internal static global::System.Resources.ResourceManager ResourceManager
+        {
+            get
+            {
+                if ((resourceMan == null))
+                {
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("IHK_Transform.Properties.Resources", typeof(Resources).Assembly);
+                    resourceMan = temp;
+                }
+                return resourceMan;
+            }
+        }
+
+        /// <summary>
+        ///   Überschreibt die CurrentUICulture-Eigenschaft des aktuellen Threads für alle
+        ///   Ressourcenlookups, die diese stark typisierte Ressourcenklasse verwenden.
+        /// </summary>
+        [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
+        internal static global::System.Globalization.CultureInfo Culture
+        {
+            get
+            {
+                return resourceCulture;
+            }
+            set
+            {
+                resourceCulture = value;
+            }
+        }
+    }
+}
+
+
+# File: .\IHK-Transform\Properties\Settings.Designer.cs
+
+﻿//------------------------------------------------------------------------------
+// <auto-generated>
+//     This code was generated by a tool.
+//     Runtime Version:4.0.30319.42000
+//
+//     Changes to this file may cause incorrect behavior and will be lost if
+//     the code is regenerated.
+// </auto-generated>
+//------------------------------------------------------------------------------
+
+namespace IHK_Transform.Properties
+{
+
+
+    [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "11.0.0.0")]
+    internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase
+    {
+
+        private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
+
+        public static Settings Default
+        {
+            get
+            {
+                return defaultInstance;
+            }
+        }
+    }
+}
+
+
+# File: .\IHK-Transform\Services\Base\DataHandler.cs
+
+﻿using System.Collections.Generic;
+using IHK_Transform.Models;
+using IHK_Transform.Models.Entities;
+
+namespace IHK_Transform.Services
+{
+    /// <summary>
+    /// diese Klasse soll dynamisch auslesen welche Datenhaltung vorhanden ist und entsprechend reagieren
+    /// Erweiterungen dieser Klasse sollen vorab nur als Spezialisierung in geerbten Klasse vorhanden sein
+    /// Die Dynamisierung wird deswegen als virtual deklariert
+    /// </summary>
+    public abstract class DataHandler
+    {
+        internal List<Azubi> _azubis = new List<Azubi>();
+        internal List<Ausbilder> _ausbilder = new List<Ausbilder>();
+        internal List<Ausbildung> _ausbildungen = new List<Ausbildung>();
+
+        public abstract void LoadData();
+        internal virtual List<Azubi> GetAzubiData() => _azubis;
+        internal virtual List<Ausbilder> GetAusbilderData() => _ausbilder;
+        internal virtual List<Ausbildung> GetAusbildungData() => _ausbildungen;
+
+
+        public virtual object ReadData()
+        {
+            //zuerst auslesen aller Datanhalterunegn, dann aufruf der GetValue
+            //diese gibt dann die Datanhaltung als object zurück
+            object t = null;
+
+            return t;
+        }
+
+        object GetData()
+        {
+            object m = null;
+
+            return m;
+        }
+    }
+}
+
+
+# File: .\IHK-Transform\Services\Implementations\CsvDataService.cs
+
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using IHK_Transform.Models.Entities;
+using IHK_Transform.Services.Interfaces;
+
+namespace IHK_Transform.Services.Implementations
+{
+    public class CsvDataService : IDataProvider
+    {
+        // Felder für Datenhaltung
+        private List<Azubi> _azubis = new List<Azubi>();
+        private List<Ausbilder> _ausbilder = new List<Ausbilder>();
+        private List<Ausbildung> _ausbildungen = new List<Ausbildung>();
+
+        private string _filePath;
+        private char _delimiter = ';';
+        private string _lastError = string.Empty;
+
+        // Interface-Implementierungen
+        public bool IsConnected { get; private set; }
+        public string LastError => _lastError;
+
+        public void SetFilePath(string filePath)
+        {
+            _filePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
+        }
+
+        public void SetDelimiter(char delimiter) => _delimiter = delimiter;
+
+        // --- IDataProvider-Implementierung ---
+        public void Connect() => IsConnected = true; // CSV-Datei benötigt keine Verbindung
+        public void Disconnect() => IsConnected = false;
+
+        public void SetSource(string source) => SetFilePath(source);
+
+        public void LoadData()
+        {
+            if (string.IsNullOrWhiteSpace(_filePath))
+                throw new InvalidOperationException("Die Datei wurde nicht gefunden oder der Pfad ist leer.");
+
+            try
+            {
+                _azubis.Clear();
+                _ausbilder.Clear();
+                _ausbildungen.Clear();
+                LoadAzubiData();
+                LoadAusbilderData();
+                LoadAusbildungData();
+            }
+            catch (Exception ex)
+            {
+                _lastError = $"Fehler beim Laden: {ex.Message}";
+                throw;
+            }
+        }
+
+        // --- IDataHandler-Implementierung ---
+        public void SaveData()
+        {
+            throw new NotImplementedException("CSV-Speicherung nicht implementiert.");
+        }
+
+        // --- Datenabfragen ---
+        public List<Azubi> GetAzubiData() => _azubis;
+        public List<Ausbilder> GetAusbilderData() => _ausbilder;
+        public List<Ausbildung> GetAusbildungData() => _ausbildungen;
+
+        // --- Private Hilfsmethoden ---
+        private void LoadAzubiData()
+        {
+            string[] lines = File.ReadAllLines(_filePath);
+            _azubis.Clear();
+            int startIndex = Array.FindIndex(lines, line => line.StartsWith("[Azubis]"));
+            if (startIndex == -1)
+                throw new InvalidOperationException("Fehlender [Azubis]-Header.");
+
+            for (int i = startIndex + 1; i < lines.Length && !lines[i].StartsWith("["); i++)
+            {
+                string[] data = lines[i].Split(_delimiter);
+                if (data.Length < 6) 
+                    continue;
+                
+                _azubis.Add(new Azubi
+                (
+                    int.Parse(data[0]),
+                    data[1],
+                    data[2],
+                    DateTime.Parse(data[3]),
+                    data[4],
+                    int.Parse(data[5])
+                ));
+            }
+        }
+
+        private void LoadAusbilderData()
+        {
+            string[] lines = File.ReadAllLines(_filePath);
+            _ausbilder.Clear();
+            int startIndex = Array.FindIndex(lines, line => line.StartsWith("[Ausbilder]"));
+            if (startIndex == -1) 
+                throw new InvalidOperationException("Fehlender [Ausbilder]-Header.");
+
+            for (int i = startIndex + 1; i < lines.Length && !lines[i].StartsWith("["); i++)
+            {
+                string[] data = lines[i].Split(_delimiter);
+                if (data.Length < 3)
+                    continue;
+
+                _ausbilder.Add(new Ausbilder(
+                    int.Parse(data[0]),
+                    data[1],
+                    data[2]
+                ));
+
+            }
+        }
+
+        private void LoadAusbildungData()
+        {
+            string[] lines = File.ReadAllLines(_filePath);
+            _ausbildungen.Clear();
+            int startIndex = Array.FindIndex(lines, line => line.StartsWith("[Ausbildungen]"));
+            if (startIndex == -1)
+                throw new InvalidOperationException("Die Datei enthält keine Ausbildungen.");
+
+            for (int i = startIndex + 1; i < lines.Length && !lines[i].StartsWith("["); i++)
+            {
+                string[] data = lines[i].Split(_delimiter);
+                if (data.Length < 2)
+                    continue;
+
+                _ausbildungen.Add(new Ausbildung
+                (
+                    data[0],
+                    data[1]
+                ));
+            }
+        }
+    }
+}
+
+# File: .\IHK-Transform\Services\Implementations\DataService.cs
+
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using IHK_Transform.Models;
+using IHK_Transform.Models.Entities;
+
+namespace IHK_Transform
+{
+    internal class DataService
+    {
+        public DataService()
+        {
+            
+        }
+
+        public List<Azubi> GetAzubi()
+        {
+            return new List<Azubi>
+            {
+                 
+            };
+        }
+
+        public List<Ausbilder> GetAusbilder()
+        {
+            return new List<Ausbilder>
+            {
+                
+            };
+        }
+
+        public List<Ausbildung> GetAusbildung()
+        {
+            return new List<Ausbildung>
+            {
+                
+            };
+        }
+    }
+}
+
+# File: .\IHK-Transform\Services\Implementations\SqlDataService.cs
+
+﻿using IHK_Transform.Models;
+using MySql.Data.MySqlClient;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using IHK_Transform;
+using System.Diagnostics;
+using IHK_Transform.Models.Entities;
+using IHK_Transform.Services.Interfaces;
+using IHK_Transform.Utilities;
+
+namespace IHK_Transform.Services
+{
+    internal class SqlDataService : IDataProvider
+    {
+        private List<Azubi> _azubis = new List<Azubi>();
+        private List<Ausbilder> _ausbilder = new List<Ausbilder>();
+        private List<Ausbildung> _ausbildungen = new List<Ausbildung>();
+        private readonly string _connectionString;
+        private string _lastError = string.Empty;
+
+        
+        // Interface-Implementierungen
+        public bool IsConnected { get; private set; }
+        public string LastError => _lastError;
+
+        public SqlDataService(IniReader iniReader)
+        {
+            // Verbindungsdaten aus der INI-Datei lesen
+            string server = iniReader.GetValue("SQL", "server") ?? "localhost";
+            string port = iniReader.GetValue("SQL", "port") ?? "3306";
+            string database = iniReader.GetValue("SQL", "database") ?? "ihk_transformer";
+            string user = iniReader.GetValue("SQL", "user") ?? "root";
+            string password = iniReader.GetValue("SQL", "password") ?? "";
+
+            _connectionString = $"Server={server},Port={port};Database={database};User Id={user};Password={password};";
+        }
+
+        // --- IDataProvider-Implementierung ---
+        public void Connect()
+        {
+            try
+            {
+                using (var conn = GetConnection())
+                {
+                    conn.Open();
+                    IsConnected = true;
+                }
+            }
+            catch (Exception e)
+            {
+                _lastError = e.Message;
+                IsConnected = false;
+            }
+        }
+
+        public void Disconnect() => IsConnected = false;
+
+        public void SetSource(string source)
+        {
+            throw new NotImplementedException("Set Source wird für SQL-Datenquellen nicht unterstützt");
+        }
+
+        public void SetFilePath(string filePath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void LoadData()
+        {
+            if(!IsConnected)
+            {
+                throw new InvalidOperationException("Datenbankverbindung wurde noch nicht hergestellt.");
+            }
+
+            try
+            {
+                LoadAzubiData();
+                LoadAusbilderData();
+                LoadAusbildungData();
+            }
+            catch (Exception e)
+            {
+                _lastError = $"Datenladefehler : {e.Message}";
+                Debug.WriteLine(_lastError);
+            }
+        }
+
+        // --- DataHandler-Implementierung (geerbt) ---
+        public void SaveData()
+        {
+            // Optional: Logik zum Speichern von Änderungen in der Datenbank
+            throw new NotImplementedException("SaveData ist für SQL noch nicht implementiert");
+        }
+
+        // --- Datenabfragen ---
+        public List<Azubi> GetAzubiData() => _azubis;
+        public List<Ausbilder> GetAusbilderData() => _ausbilder;
+        public List<Ausbildung> GetAusbildungData() => _ausbildungen;
+
+        private MySqlConnection GetConnection() => new MySqlConnection(_connectionString);
+
+        private void LoadAzubiData()
+        {
+            _azubis.Clear();
+            using (MySqlConnection conn = GetConnection())
+            {
+                conn.Open();
+                MySqlCommand cmd = new MySqlCommand("SELECT * FROM Azubis", conn);
+                using (MySqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        try
+                        {
+                            _azubis.Add(new Azubi(
+                                reader.GetInt32("azubi_id"),
+                                reader.GetString("vorname"),
+                                reader.GetString("nachname"),
+                                reader.GetDateTime("geburtsdatum"),
+                                reader.GetString("ausbildung_id"),
+                                reader.GetInt32("ausbilder_id")
+                            ));
+                        }
+                        catch (Exception ex)
+                        {
+                            _lastError = $"Fehler beim Verarbeiten eines Azubi-Eintrags: {ex.Message}";
+                            Debug.WriteLine(_lastError);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void LoadAusbilderData()
+        {
+            _ausbilder.Clear();
+            using (MySqlConnection conn = GetConnection())
+            {
+                conn.Open();
+                MySqlCommand cmd = new MySqlCommand("SELECT * FROM ausbilder", conn);
+                using (MySqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        try
+                        {
+                            _ausbilder.Add(new Ausbilder(
+                                reader.GetInt32("ausbilder_id"),
+                                reader.GetString("vorname"),
+                                reader.GetString("nachname")
+                            ));
+                        }
+                        catch (Exception ex)
+                        {
+                            _lastError = $"Fehler beim Verarbeiten eines Ausbilder-Eintrags: {ex.Message}";
+                            Debug.WriteLine(_lastError);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void LoadAusbildungData()
+        {
+            _ausbildungen.Clear();
+            using (MySqlConnection conn = GetConnection())
+            {
+                conn.Open();
+                MySqlCommand cmd = new MySqlCommand("SELECT * FROM ausbildungen", conn);
+                using (MySqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        try
+                        {
+                            _ausbildungen.Add(new Ausbildung(
+                                reader.GetString("ausbildung_id"),
+                                reader.GetString("bezeichnung")
+                            ));
+                        }
+                        catch (Exception ex)
+                        {
+                            _lastError = $"Fehler beim Verarbeiten eines Ausbildung-Eintrags: {ex.Message}";
+                            Debug.WriteLine(_lastError);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+# File: .\IHK-Transform\Services\Implementations\XmlDataService.cs
+
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Xml.Linq;
+using IHK_Transform.Models;
+using IHK_Transform.Models.Entities;
+
+namespace IHK_Transform.Services
+{
+    internal class XmlDataService : DataHandler
+    {
+        // private List<Azubi> _azubis = new List<Azubi>();
+        // private List<Ausbilder> _ausbilder = new List<Ausbilder>();
+        // private List<Ausbildung> _ausbildungen = new List<Ausbildung>(); 
+        private string _filePath;
+
+        public void SetFilePath(string filePath)
+        {
+            _filePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
+        }
+
+        public override void LoadData()
+        {
+            if (string.IsNullOrWhiteSpace(_filePath))
+                throw new InvalidOperationException("Die Datei wurde nicht gefunden oder der Pfad ist leer.");
+
+            LoadAzubiData();
+            LoadAusbilderData();
+            LoadAusbildungData();
+        }
+
+        private void LoadAzubiData()
+        {
+            XDocument doc = XDocument.Load(_filePath);
+            foreach (var a in doc.Descendants("Azubis").Elements("Eintrag"))
+            {
+                try
+                {
+                    int azubiID = int.Parse(a.Element("azubi_id")?.Value ?? "0");
+                    string vorname = a.Element("vorname")?.Value ?? "NULL";
+                    string nachname = a.Element("nachname")?.Value ?? "NULL";
+                    DateTime ausbildungsbeginn = DateTime.Parse(a.Element("ausbildungsbeginn")?.Value ?? "2000-01-01");
+                    string ausbildungID = a.Element("ausbildung_id")?.Value ?? "0";
+                    int ausbilderID = int.Parse(a.Element("ausbilder_id")?.Value ?? "0");
+
+                    _azubis.Add(new Azubi(azubiID, vorname, nachname, ausbildungsbeginn, ausbildungID, ausbilderID));
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Fehler beim Verarbeiten eines Azubi-Eintrags: {ex.Message}");
+                }
+            }
+        }
+
+        private void LoadAusbilderData()
+        {
+            XDocument doc = XDocument.Load(_filePath);
+            foreach (var a in doc.Descendants("Ausbilder").Elements("Eintrag"))
+            {
+                try
+                {
+                    int ausbilderID = int.Parse(a.Element("ausbilder_id")?.Value ?? "0");
+                    string vorname = a.Element("vorname")?.Value ?? "NULL";
+                    string nachname = a.Element("nachname")?.Value ?? "NULL";
+
+                    _ausbilder.Add(new Ausbilder(ausbilderID, vorname, nachname));
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Fehler beim Verarbeiten eines Ausbilder-Eintrags: {ex.Message}");
+                }
+            }
+        }
+
+        private void LoadAusbildungData()
+        {
+            XDocument doc = XDocument.Load(_filePath);
+            foreach (var a in doc.Descendants("Ausbildungen").Elements("Eintrag"))
+            {
+                try
+                {
+                    string ausbildungID = a.Element("ausbildung_id")?.Value ?? "0";
+                    string bezeichnung = a.Element("bezeichnung")?.Value ?? "NULL";
+
+                    _ausbildungen.Add(new Ausbildung(ausbildungID, bezeichnung));
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Fehler beim Verarbeiten eines Ausbildungs-Eintrags: {ex.Message}");
+                }
+            }
+        }
+
+        // public List<Azubi> GetAzubiData() => _azubis;
+        // public List<Ausbilder> GetAusbilderData() => _ausbilder;
+        // public List<Ausbildung> GetAusbildungData() => _ausbildungen;
+    }
+}
+
+
+# File: .\IHK-Transform\Services\Interfaces\IDataHandler.cs
+
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using IHK_Transform.Models;
+using IHK_Transform.Models.Entities;
+
+namespace IHK_Transform.Services.Interfaces
+{
+    public interface IDataHandler
+    {
+        // Basismethoden für Datenverwaltung
+        void LoadData();
+        void SaveData();
+
+        // Datenbereitstellung
+        List<Azubi> GetAzubiData();
+        List<Ausbilder> GetAusbilderData();
+        List<Ausbildung> GetAusbildungData();
+    }
+}
+
+
+# File: .\IHK-Transform\Services\Interfaces\IDataProvider.cs
+
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using IHK_Transform.Models;
+using IHK_Transform.Models.Entities;
+
+namespace IHK_Transform.Services.Interfaces
+{
+    public interface IDataProvider : IDataHandler
+    {
+        // Verbindungsverwaltung
+        bool IsConnected { get; }
+        void Connect();
+        void Disconnect();
+
+        // Datenquellensteuerung
+        void SetSource(string source);
+        new void LoadData();
+
+        // Datenabfragen
+        new List<Azubi> GetAzubiData();
+        new List<Ausbilder> GetAusbilderData();
+        new List<Ausbildung> GetAusbildungData();
+
+        // Fehlerbehandlung
+        string LastError { get; }
+    }
+}
+
+
+# File: .\IHK-Transform\Services\Interfaces\IDataService.cs
+
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using IHK_Transform.Models;
+using IHK_Transform.Models.Entities;
+
+namespace IHK_Transform.Services.Interfaces
+{
+    internal interface IDataService
+    {
+        // Grundlegende CRUD-Operationen
+        List<Azubi> GetAzubiData();
+        List<Ausbilder> GetAusbilderData();
+        List<Ausbildung> GetAusbildungData();
+
+        // Spezifische Datenzugriffsmethoden
+        Azubi GetAzubiById(int id);
+        Ausbilder GetAusbilderById(int id);
+        Ausbildung GetAusbildungById(string id);
+
+        // Datenladefunktionen
+        void LoadData();
+        void SetFilePath(string path);
+    }
+}
+
+
+# File: .\IHK-Transform\Views\Forms\MainForm.cs
+
+﻿using System;
+using System.Collections.Generic;
+using System.Windows.Forms;
+using IHK_Transform.Controllers.Interfaces;
+using IHK_Transform.Utilities;
+using IHK_Transform.Views.Interfaces;
+
+namespace IHK_Transform.Views.Forms
+{
+    public partial class MainForm : Form, IMainView
+    {
+        // Implementierung von IMainView
+        public DataGridView AzubiGrid => dgvAzubi;
+        public event EventHandler LoadSqlDataRequested;
+        public event EventHandler LoadCsvDataRequested;
+        public event EventHandler LoadXmlDataRequested;
+        
+        private readonly IDataController _dataController;
+
+        // private XmlDataService _xmlDataService;
+        // private CsvDataService _csvDataService;
+        // private readonly FileHandler _fileHandler;
+
+        public MainForm(IDataController dataController)
+        {
+            // _xmlDataService = new XmlDataService();
+            // _csvDataService = new CsvDataService();
+            // _fileHandler = new FileHandler(_xmlDataService, _csvDataService);
+
+            // var dataService = new DataService();
+            // _dataController = new DataController(dataService);
+            // InitializeComponent();
+            // InitializeHandlers();
+
+            _dataController = dataController;
+            InitializeComponent();
+            WireEvents();
+        }
+
+        private void WireEvents()
+        {
+           btnLoadSQL.Click += (s, e) => LoadSqlDataRequested.Invoke(this, EventArgs.Empty);
+           btnLoadCSV.Click += (s, e) => LoadCsvDataRequested.Invoke(this, EventArgs.Empty);
+           btnLoadXML.Click += (s, e) => LoadXmlDataRequested.Invoke(this, EventArgs.Empty);
+
+           _dataController.DataLoaded += (s, e) => ShowMessage("Daten erfolgreich geladen!", false);
+           _dataController.ErrorOccurred += (s, msg) => ShowMessage(msg);
+        }
+
+        public void InitializeHandlers()
+        {
+            try
+            {
+                var iniReader = new IniReader("Config/config.ini");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Fehler beim Initialisieren: {ex.Message}", "Fehler", MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnLoadSQL_Click(object sender, EventArgs e)
+        {
+            LoadSqlDataRequested.Invoke(this, EventArgs.Empty);
+
+            /*try
+            {
+                var iniReader = new IniReader("Config/config.ini");
+                var sqlDataService = new SqlDataService(iniReader);
+
+                sqlDataService.LoadData();
+
+                _dataController.LoadDataFromSQL(sqlDataService);
+
+                var data = _dataController.DisplayAzubis();
+                dgvAzubi.DataSource = data;
+
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+                throw;
+            }*/
+        }
+
+        private void btnLoadCSV_Click(object sender, EventArgs e)
+        {
+            LoadCsvDataRequested.Invoke(this, EventArgs.Empty);
+            /*try
+            {
+                var iniReader = new IniReader("Config/config.ini");
+                string delimiterStr = iniReader.GetValue("CSV", "delimiter");
+                char delimiter = string.IsNullOrWhiteSpace(delimiterStr) ? ';' : delimiterStr[0];
+
+                _csvDataService.SetDelimiter(delimiter);
+                _fileHandler.LoadData("csv");
+                _dataController.LoadDataFromCSV(_csvDataService);
+                var data = _dataController.DisplayAzubis();
+                dgvAzubi.DataSource = data;
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+                throw;
+            }*/
+        }
+
+        private void btnLoadXML_Click(object sender, EventArgs e)
+        {
+            LoadXmlDataRequested.Invoke(this, EventArgs.Empty);
+            // _fileHandler.LoadData("xml");
+            // _dataController.LoadDataFromXml(_xmlDataService);
+            // var data = _dataController.DisplayAzubis();
+            // dgvAzubi.DataSource = data;
+        }
+
+        // UI-Update Methoden
+        public void DisplayData(List<object> data)
+        {
+            dgvAzubi.DataSource = data; // DataGrid aktualisieren
+        }
+
+        public void ShowMessage(string message, bool isError = true)
+        {
+            MessageBox.Show(
+                message,
+                isError ? "Fehler" : "Info",
+                MessageBoxButtons.OK,
+                isError ? MessageBoxIcon.Error : MessageBoxIcon.Information);
+        }
+
+        public void ShowLoadingState(bool isLoading)
+        {
+            btnLoadCSV.Enabled = !isLoading;
+            btnLoadSQL.Enabled = !isLoading;
+            btnLoadXML.Enabled = !isLoading;
+        }
+    }
+}
+
+
+# File: .\IHK-Transform\Views\Forms\MainForm.Designer.cs
+
+﻿namespace IHK_Transform.Views.Forms
+{
+    partial class MainForm
+    {
+        /// <summary>
+        /// Erforderliche Designervariable.
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary>
+        /// Verwendete Ressourcen bereinigen.
+        /// </summary>
+        /// <param name="disposing">True, wenn verwaltete Ressourcen gelöscht werden sollen; andernfalls False.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region Vom Windows Form-Designer generierter Code
+
+        /// <summary>
+        /// Erforderliche Methode für die Designerunterstützung.
+        /// Der Inhalt der Methode darf nicht mit dem Code-Editor geändert werden.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            this.dgvAzubi = new System.Windows.Forms.DataGridView();
+            this.btnLoadSQL = new System.Windows.Forms.Button();
+            this.btnLoadCSV = new System.Windows.Forms.Button();
+            this.btnLoadXML = new System.Windows.Forms.Button();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvAzubi)).BeginInit();
+            this.SuspendLayout();
+            // 
+            // dgvAzubi
+            // 
+            this.dgvAzubi.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvAzubi.Location = new System.Drawing.Point(12, 12);
+            this.dgvAzubi.Name = "dgvAzubi";
+            this.dgvAzubi.Size = new System.Drawing.Size(695, 426);
+            this.dgvAzubi.TabIndex = 0;
+            // 
+            // btnLoadSQL
+            // 
+            this.btnLoadSQL.Location = new System.Drawing.Point(713, 12);
+            this.btnLoadSQL.Name = "btnLoadSQL";
+            this.btnLoadSQL.Size = new System.Drawing.Size(75, 23);
+            this.btnLoadSQL.TabIndex = 1;
+            this.btnLoadSQL.Text = "SQL";
+            this.btnLoadSQL.UseVisualStyleBackColor = true;
+            this.btnLoadSQL.Click += new System.EventHandler(this.btnLoadSQL_Click);
+            // 
+            // btnLoadCSV
+            // 
+            this.btnLoadCSV.Location = new System.Drawing.Point(713, 42);
+            this.btnLoadCSV.Name = "btnLoadCSV";
+            this.btnLoadCSV.Size = new System.Drawing.Size(75, 23);
+            this.btnLoadCSV.TabIndex = 2;
+            this.btnLoadCSV.Text = "CSV";
+            this.btnLoadCSV.UseVisualStyleBackColor = true;
+            this.btnLoadCSV.Click += new System.EventHandler(this.btnLoadCSV_Click);
+            // 
+            // btnLoadXML
+            // 
+            this.btnLoadXML.Location = new System.Drawing.Point(713, 72);
+            this.btnLoadXML.Name = "btnLoadXML";
+            this.btnLoadXML.Size = new System.Drawing.Size(75, 23);
+            this.btnLoadXML.TabIndex = 3;
+            this.btnLoadXML.Text = "XML";
+            this.btnLoadXML.UseVisualStyleBackColor = true;
+            this.btnLoadXML.Click += new System.EventHandler(this.btnLoadXML_Click);
+            // 
+            // Form1
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.btnLoadXML);
+            this.Controls.Add(this.btnLoadCSV);
+            this.Controls.Add(this.btnLoadSQL);
+            this.Controls.Add(this.dgvAzubi);
+            this.Name = "Form1";
+            this.Text = "Form1";
+            this.Load += new System.EventHandler(this.Form1_Load);
+            ((System.ComponentModel.ISupportInitialize)(this.dgvAzubi)).EndInit();
+            this.ResumeLayout(false);
+
+        }
+
+        #endregion
+
+        private System.Windows.Forms.DataGridView dgvAzubi;
+        private System.Windows.Forms.Button btnLoadSQL;
+        private System.Windows.Forms.Button btnLoadCSV;
+        private System.Windows.Forms.Button btnLoadXML;
+    }
+}
+
+
+
+# File: .\IHK-Transform\Views\Interfaces\IMainView.cs
+
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace IHK_Transform.Views.Interfaces
+{
+    internal interface IMainView
+    {
+        // DataGrid-Zugriff
+        DataGridView AzubiGrid { get; }
+
+        // Methode zur Datenanzeige hinzufügen
+        void DisplayData(List<object> data);
+
+        // Ereignisse
+        event EventHandler LoadSqlDataRequested;
+        event EventHandler LoadCsvDataRequested;
+        event EventHandler LoadXmlDataRequested;
+
+        // Statusupdates
+        void ShowLoadingState(bool isLoading);
+        void ShowMessage(string message, bool isError = true);
+    }
+}
+
+
+----------------------------------------
+Summary:
+- Total characters: 60547
+- Total files processed: 26
+- Total file size: 62564 bytes
+- Skipped directories: 0
+- Skipped files: 107
+- Execution time: 0:00:00.143372
+----------------------------------------

@@ -13,7 +13,7 @@ using IHK_Transform.Models.Entities;
 
 namespace IHK_Transform.Services
 {
-    internal class XmlDataService : DataHandler
+    public class XmlDataService : DataHandler
     {
         // private List<Azubi> _azubis = new List<Azubi>();
         // private List<Ausbilder> _ausbilder = new List<Ausbilder>();

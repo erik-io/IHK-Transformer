@@ -8,7 +8,7 @@ namespace IHK_Transform.Models.Entities
     /// Repräsentiert einen Ausbilder im System.
     /// Implementiert INotifyPropertyChanged, für die GUI-Aktualisierung.
     /// </summary>
-    internal class Ausbilder : INotifyPropertyChanged
+    public class Ausbilder : INotifyPropertyChanged
     {
         private int _ausbilderId;
         private string _vorname;

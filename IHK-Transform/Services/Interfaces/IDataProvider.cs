@@ -8,16 +8,23 @@ using IHK_Transform.Models.Entities;
 
 namespace IHK_Transform.Services.Interfaces
 {
-    internal interface IDataProvider //: IDataHandler
+    public interface IDataProvider : IDataHandler
     {
-        // Grundlegende Provider-Operationen
-        void SetFilePath(string filePath);
-        void SetConfiguration(IDictionary<string, string> config);
-        void LoadData();
+        // Verbindungsverwaltung
+        bool IsConnected { get; }
+        void Connect();
+        void Disconnect();
 
-        // Daten-Zugriffsmethoden
-        List<Azubi> GetAzubiData();
-        List<Ausbilder> GetAusbilderData();
-        List<Ausbildung> GetAusbildungData();
+        // Datenquellensteuerung
+        void SetSource(string source);
+        new void LoadData();
+
+        // Datenabfragen
+        new List<Azubi> GetAzubiData();
+        new List<Ausbilder> GetAusbilderData();
+        new List<Ausbildung> GetAusbildungData();
+
+        // Fehlerbehandlung
+        string LastError { get; }
     }
 }
